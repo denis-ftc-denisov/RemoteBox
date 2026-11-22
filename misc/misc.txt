@@ -1,0 +1,129 @@
+Random Notes
+------------
+
+
+# FreeBSD
+p5-Regexp-Common
+p5-File-Which
+
+# AL 9 and 8 / RL 9 and 8
+perl-Regexp-Common
+perl-File-Which
+
+# Debian
+libregexp-common-perl
+libfile-which-perl
+
+# NetBSD
+p5-Regexp-Common
+p5-File-Which
+(no broadwayd)
+
+# Mageia
+perl-Regexp-Common
+perl-File-Which
+
+# OpenSuse
+perl-Regexp-Common
+perl-File-Which
+
+
+#Ubuntu
+libregexp-common-perl
+libfile-which-perl
+
+
+BUGS
+====
+* MAJOR BUG: Creating a new disk but not saving the changes can leave disk attached but not attached.
+  Worked around by explicitly saving guest settings when adding a disk
+  # REVISIT WITH VB 7.1.x
+  [THIS APPEARS TO BE A VB BUG]
+
+*. MAJOR BUG: Doing stuff with snapshots leaves storage attached to a snapshot
+   # REVISIT WITH VB 7.1.x
+   [THIS APPEARS TO BE A VB BUG]
+
+*. MAJOR BUG: Adding and removing shared folders then pressing cancel seems to cause a lock (VB bug??)
+   Worked around by explicitly saving guest settings when adding a share
+    # REVISIT WITH VB 7.1.x
+    [THIS APPEARS TO BE A VB BUG]
+
+* On the network box the NAT and EDIT need to be editables comboboxes
+* Do different gfx cards have diff memory configs depending on model and size??? (YES THEY DO)
+* Is the Virtiosound actually supported? We need to figure out its codecs
+* Instead of using signals by name for blocking, we can now actually "ask" for them so we can do away with the %signal ultimately
+* Open progress dialog in centre of parent
+
+FEATURES
+========
+* GTkPlug might be useful for embedding
+* Need to allow online removal and addition of storage for SATA and USB controllers (THIS IS MASSIVELY COMPLICATED GUI WISE - REALLY WORTH IT??)
+* Allow audio backend change when guest is in a saved state.
+* Guest list add group names to collapsable bits if possible
+* CPU profiles like 386 etc etc
+* ISO Creator
+* Make sure the VirtualBox verion check and the associated error box use the same variable to avoid them getting out of sync.
+
+
+ARM STUFF
+=========
+
+ChipSet:
+Display: QemuRAMFB (is this ARM only)
+
+WEBSITE / DOCUMENTATION BITS
+----------------------------
+1. FAQ about disk resizing / compaction
+
+ALWAYS BEFORE PACKAGING
+-----------------------
+
+1. REMOVE ANY OBVIOUS JUNK OR DUMMY CODE
+2. REMOVE USE DUMPER;
+3. REMOVE JUNK FILES FROM FOLDER (BASICALLY CREATE A NEW ONE AND COPY WHAT IS NEEDED)
+4. Update versioning information, including supported versions of VirtualBox
+5. Update to the latest vboxService.pm
+6. Make sure the recommended version error box is correct
+
+
+NOTES
+
+DEBUGGING - NOT VERY USEFUL ACTUALLY
+==========
+$ export G_DEBUG=fatal-criticals
+$ gdb --args perl your-app.pl
+https://mail.gnome.org/archives/gtk-perl-list/2015-February/msg00006.html
+
+Perl Idents
+-----------
+
+This is $^O
+
+Windows = MSWin32 (with a 32bit implementation of Perl)
+MacOS X = Darwin
+NetBSD = netbsd
+Solaris = solaris
+OpenIndiana = solaris
+
+
+4. SOAP Debugging
+-----------------
+
+use SOAP::Lite +trace => 'debug';
+
+
+5. VirtualBox Session Handling
+------------------------------
+
+Write  -> Mutable but only $IMachine & $IConsole Available
+VM     -> Mutable. All Classes available
+Shared -> Immutable. All Classes available
+
+
+
+Generating the vboxSerice.pm file using Perl SOAP Lite
+
+Example
+
+/usr/bin/stubmaker.pl file:///~/Download/sdk/bindings/webservice/vboxwebService.wsdl

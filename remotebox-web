@@ -1,0 +1,60 @@
+#!/usr/bin/env perl
+# ^^^ You may need to change this to the location of your perl interpreter
+# (c) 2010-2025 Ian Chapman. Licenced under the terms of the GPL
+#
+# This is a wrapper script which tries to launch RemoteBox in a browser window
+# running on localhost at port 5000. Browsers must support HTML 5 and web
+# sockets.
+#
+use strict;
+use warnings;
+use File::Which;
+use FindBin qw($Bin);
+
+# The port an URL can be modified if needed. Be aware that running and on an
+# externally accessible interface is a security risk.
+my %cfg = (port => 5000,
+           url  => 'http://localhost');
+
+my $broadwayd = which('broadwayd');
+die "Error: You do not have broadwayd available in your command path" if (!$broadwayd);
+
+# See if there's a remotebox in the same directory, otherwise to to the command path
+my $remotebox = (-e "$Bin/remotebox") ? "$Bin/remotebox" : which('remotebox');
+die "Error: You do not have remotebox available in your command path" if (!$remotebox);
+
+my $browser;
+# Try a range of compatible browsers to open in. We start with xdg-open to try and use
+# the user's preferred browser. Then fall back to see if other browsers are installed.
+my @browsers = ('xdg-open',
+                'firefox',
+                'google-chrome',
+                'google-chrome-stable',
+                'microsoft-edge',
+                'microsoft-edge-stable',
+                'chromium-browser',
+                'chromium',
+                'konqueror',
+                'seamonkey',
+                'falkon',
+                'epiphany-browser',
+                'epiphany',
+                'safari',
+                'explorer.exe',
+                'open');
+
+# Find the first one that exists in the command path
+foreach my $entry (@browsers) {
+    last if ($browser = which($entry));
+}
+
+die "Error: You do not have a supported web browser in your command path" if(!$browser);
+print("RemoteBox Web\n");
+print("RemoteBox Application URL: $cfg{url}:$cfg{port}\n");
+print("Broadway Daemon: $broadwayd\n");
+system("$broadwayd --port $cfg{port} 1>/dev/null 2>/dev/null &");
+sleep 1;
+print("Detected Browser: $browser\n");
+system("$browser $cfg{url}:$cfg{port} &");
+print("Detected RemoteBox Instance: $remotebox\n\n\n");
+system("GDK_BACKEND=broadway $remotebox");

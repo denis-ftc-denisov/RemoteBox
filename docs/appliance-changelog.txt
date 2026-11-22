@@ -1,0 +1,11 @@
+MODIFICATIONS FROM NORM
+* Removed rhgb quiet from the kernel line
+* Removed the rescue entry
+* systemctl mask rc-local (as it's run on reboot from cron)
+* Added dmesg -n1 to /etc/rc.d/rc.local as syslog is removed it gets written to console
+* Changed the /etc/issue and /etc/issue.net files
+* Turned off weak deps in /etc/dnf/libdnf5.conf.d/01-remoteboxappliance.conf
+* Limit kernels to 1 in /etc/dnf/libdnf5.conf.d/01-remoteboxappliance.conf
+* Created broadwayd-http and remotebox-http systemd service files for starting on boot
+
+
