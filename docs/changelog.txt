@@ -1,3 +1,9 @@
+3.8
+---
+- Fixed: In VB 7.2.6 RDP extension name changed. Use new extension name to fix
+  extension pack not installed errors
+
+
 3.7 (24 Aug 2025)
 -----------------
 - RemoteBox now requires VirtualBox 7.2.x
