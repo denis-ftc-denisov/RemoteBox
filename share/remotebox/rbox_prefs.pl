@@ -1,6 +1,7 @@
 # RemoteBox and VirtualBox preferences
 use strict;
 use warnings;
+use Glib ('TRUE','FALSE');
 our %gui;
 our %prefs = (RDPCLIENT           => 'xfreerdp /size:%Xx%Y /bpp:32 +clipboard /sound /t:"%n - RemoteBox" /v:%h:%p /d: /p: /cert:ignore',
               VNCCLIENT           => 'vncviewer -Shared -AcceptClipboard -SetPrimary -SendClipboard -SendPrimary -RemoteResize -DesktopSize %Xx%Y  %h:%p',

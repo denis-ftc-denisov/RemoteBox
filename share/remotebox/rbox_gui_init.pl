@@ -1,9 +1,12 @@
 # General GUI related functions and structures
 use strict;
 use warnings;
+use Gtk3;
+use Glib ('TRUE','FALSE');
+use Regexp::Common qw /net/;
 use utf8;
 
-our $sharedir;
+our ($sharedir, $endpoint);
 our %gui = (appname         => 'RemoteBox',
             appver          => 'v3.7',
             websn           => undef);

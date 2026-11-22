@@ -1,8 +1,9 @@
 # Main Entry for RemoteBox
 use strict;
 use warnings;
+use Gtk3;
 
-our (%gui, %prefs);
+our (%gui, %prefs, $endpoint, $fault);
 my %cmdopts=();
 $endpoint = 'http://localhost:18083';
 $fault = sub{}; # Do nothing with faults until connected

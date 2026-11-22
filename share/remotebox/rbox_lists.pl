@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 
-our (%gui, %vmc, %signal, %prefs);
+our (%gui, %vmc, %signal, %prefs, $endpoint);
 
 # Block for filling in guest details
 {

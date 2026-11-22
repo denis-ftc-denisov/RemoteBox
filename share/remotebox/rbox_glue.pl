@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Time::HiRes qw(gettimeofday);
 our (%gui, $sharedir);
 
 # Virtualization Host Specification
@@ -383,7 +384,7 @@ sub strim {
 }
 
 sub generate_uuid {
-    my $time = int(gettimeofday * 1000000);
+    my $time = int(gettimeofday() * 1000000);
     my $random = unpack('H*', pack('L*', rand(), rand(), rand(), rand()));
     my $md5 = Digest::MD5->new;
     $md5->add($time . $random);
