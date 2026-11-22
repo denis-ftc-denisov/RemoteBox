@@ -104,7 +104,7 @@ sub build_dialogAbout {
     $gui{d}{About}{dialog}->set_program_name($gui{appname});
     $gui{d}{About}{dialog}->set_version($gui{appver});
     $gui{d}{About}{dialog}->set_comments("RemoteBox is a client for managing VirtualBox and its guests over the network.\nFor use with VirtualBox 7.2.x");
-    $gui{d}{About}{dialog}->set_copyright("RemoteBox (ex. artwork) Copyright © 2010-2025 Ian Chapman\nRemoteBox is not affiliated with Oracle.\nAll trademarks belong to their respective owners.\n\nIf you like RemoteBox or have found it useful, please consider donating.");
+    $gui{d}{About}{dialog}->set_copyright("RemoteBox (ex. artwork) Copyright © 2010-2027 Ian Chapman\nRemoteBox is not affiliated with Oracle.\nAll trademarks belong to their respective owners.\n\nIf you like RemoteBox or have found it useful, please consider donating.");
     $gui{d}{About}{dialog}->set_documenters(['Ian Chapman <packages@amiga-hardware.com>']);
     $gui{d}{About}{dialog}->set_artists(['Icons are included which originate from the VirtualBox Open Source Edition, released under the GPL']);
     $gui{d}{About}{dialog}->set_authors(['Ian Chapman <packages@amiga-hardware.com>']);

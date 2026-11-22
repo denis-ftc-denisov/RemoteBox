@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # ^^^ You may need to change this to the location of your perl interpreter
-# (c) 2010-2025 Ian Chapman. Licenced under the terms of the GPL
+# (c) 2010-2027 Ian Chapman. Licenced under the terms of the GPL
 #
 # This is a wrapper script which tries to launch RemoteBox in a browser window
 # running on localhost at port 5000. Browsers must support HTML 5 and web

@@ -168,7 +168,7 @@ sub show_dialog_connect {
                 &addrow_msg_log("Logged into $endpoint", "Running VirtualBox $ver");
                 &show_err_msg('vboxver', $prefs{NOVERSIONWARNDIALOG}, "Detected VirtualBox Version: $ver") if ($ver !~ m/^7.2/);
                 my $vhost = &vhost();
-                
+
                 if ($$vhost{vrdeextpack} =~ m/Built-in-VBoxVRDP/i) { $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (RDP)'); }
                 elsif ($$vhost{vrdeextpack} =~ m/vnc/i) {
                     $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (VNC)');
