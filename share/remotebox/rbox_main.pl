@@ -160,6 +160,7 @@ sub show_dialog_connect {
             my $ver = IVirtualBox_getVersion($gui{websn});
 
             if (!$ver) {
+                # FIXME
                 &show_err_msg('connect', 0, "asasasasasas ($url)");
                 &virtualbox_logoff();
             }
@@ -167,8 +168,8 @@ sub show_dialog_connect {
                 &addrow_msg_log("Logged into $endpoint", "Running VirtualBox $ver");
                 &show_err_msg('vboxver', $prefs{NOVERSIONWARNDIALOG}, "Detected VirtualBox Version: $ver") if ($ver !~ m/^7.2/);
                 my $vhost = &vhost();
-
-                if ($$vhost{vrdeextpack} =~ m/Oracle VirtualBox Extension Pack/i) { $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (RDP)'); }
+                
+                if ($$vhost{vrdeextpack} =~ m/Built-in-VBoxVRDP/i) { $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (RDP)'); }
                 elsif ($$vhost{vrdeextpack} =~ m/vnc/i) {
                     $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (VNC)');
                     &addrow_msg_log('Warning: The Oracle VirtualBox Extension Pack is not installed.', '* This pack is only available for Linux, Windows, Solaris and MacOS ', '* Features which require this extension pack will be non-functional or unavailable');
