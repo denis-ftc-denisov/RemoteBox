@@ -26,7 +26,7 @@ sub init_edit_audio {
 
     # Set WinMM, MMPM and SolAudio to Null as they no longer seem supported and cause problems if set.
     my $AudioDriver = IAudioAdapter_getAudioDriver($vmc{IAudioAdapter});
-    IAudioAdapter_setAudioDriver($vmc{IAudioAdapter}, 'Null') if ($AudioDriver eq 'WinMM' or $AudioDriver eq 'MMPM' or $AudioDriver eq 'SolAudio');
+    IAudioAdapter_setAudioDriver($vmc{IAudioAdapter}, 'Null') if ($AudioDriver =~ /^(?:WinMM|MMPM|SolAudio)$/);
 
     if ($$vhost{os} =~ m/Linux/i) { $gui{d}{Edit}{cboxAudioDriver}->set_model($gui{liststoreEditAudioDriverLin}); }
     elsif ($$vhost{os} =~ m/Windows/i) { $gui{d}{Edit}{cboxAudioDriver}->set_model($gui{liststoreEditAudioDriverWin}); }
