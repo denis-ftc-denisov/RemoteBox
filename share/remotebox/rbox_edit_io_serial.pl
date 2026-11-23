@@ -4,15 +4,15 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_io_serial {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my $port = &getsel_combo($gui{d}{Edit}{cboxIOSerial}, 1);
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my $port = getsel_combo($gui{d}{Edit}{cboxIOSerial}, 1);
     my $ISerialPort = IMachine_getSerialPort($vmc{IMachine}, $port);
     my $irq = ISerialPort_getIRQ($ISerialPort);
     my $ioport = sprintf('%X', ISerialPort_getIOAddress($ISerialPort));
     my $mode = ISerialPort_getHostMode($ISerialPort);
-    $gui{d}{Edit}{checkIOSerial}->set_active(&bl(ISerialPort_getEnabled($ISerialPort)));
+    $gui{d}{Edit}{checkIOSerial}->set_active(bl(ISerialPort_getEnabled($ISerialPort)));
     $gui{d}{Edit}{gridIOSerial}->set_sensitive($gui{d}{Edit}{checkIOSerial}->get_active()); # Ghost/Unghost other widgets based on serial enabled
-    $gui{d}{Edit}{checkIOSerialpipe}->set_active(!&bl(ISerialPort_getServer($ISerialPort)));
+    $gui{d}{Edit}{checkIOSerialpipe}->set_active(!bl(ISerialPort_getServer($ISerialPort)));
     $gui{d}{Edit}{entryIOSerialpath}->set_text(ISerialPort_getPath($ISerialPort));
     $gui{d}{Edit}{entryIOSerialirq}->set_text($irq);
     $gui{d}{Edit}{entryIOSerialio}->set_text($ioport);
@@ -29,11 +29,11 @@ sub init_edit_io_serial {
         $gui{d}{Edit}{entryIOSerialio}->set_sensitive(1);
     }
 
-    $gui{d}{Edit}{checkIOSerialpipe}->set_active(&bl(ISerialPort_getServer($ISerialPort))); # Setting the pipe MUST come before setting the mode
-    &combobox_set_active_text($gui{d}{Edit}{cboxIOSerialmode}, $mode, 0);
-    $gui{d}{Edit}{checkIOSerialpipe}->set_active(&bl(ISerialPort_getServer($ISerialPort)));
-    &combobox_set_active_text($gui{d}{Edit}{cboxIOSerialuart}, ISerialPort_getUartType($ISerialPort), 1);
-    &set_pointer($gui{d}{Edit}{dialog});
+    $gui{d}{Edit}{checkIOSerialpipe}->set_active(bl(ISerialPort_getServer($ISerialPort))); # Setting the pipe MUST come before setting the mode
+    combobox_set_active_text($gui{d}{Edit}{cboxIOSerialmode}, $mode, 0);
+    $gui{d}{Edit}{checkIOSerialpipe}->set_active(bl(ISerialPort_getServer($ISerialPort)));
+    combobox_set_active_text($gui{d}{Edit}{cboxIOSerialuart}, ISerialPort_getUartType($ISerialPort), 1);
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Whether the serial port is enabled
@@ -42,7 +42,7 @@ sub io_ser {
 
     if ($vmc{SessionType} eq 'WriteLock') {
         my $state = $widget->get_active();
-        my ($ISerialPort, $port) = &io_ser_callout();
+        my ($ISerialPort, $port) = io_ser_callout();
         ISerialPort_setEnabled($ISerialPort, $state);
         $gui{d}{Edit}{gridIOSerial}->set_sensitive($state);
     }
@@ -56,7 +56,7 @@ sub io_ser_irq {
         my $irq = int($widget->get_text());
         $irq = 255 if ($irq > 255);
         $irq = 15 if ($irq > 15 and !$gui{d}{Edit}{checkSysAPIC}->get_active());
-        my ($ISerialPort, $port) = &io_ser_callout();
+        my ($ISerialPort, $port) = io_ser_callout();
         ISerialPort_setIRQ($ISerialPort, $irq);
     }
 
@@ -72,7 +72,7 @@ sub io_ser_port {
         $ioport = 'FFFF' if (hex($ioport) > 65535);
 
         if ($ioport) {
-            my ($ISerialPort, $port) = &io_ser_callout();
+            my ($ISerialPort, $port) = io_ser_callout();
             ISerialPort_setIOAddress($ISerialPort, hex($ioport));
         }
     }
@@ -83,13 +83,13 @@ sub io_ser_port {
 # Attempt to generate an appropriate port path automatically.
 sub io_ser_path_generate {
     my ($widget) = @_;
-    my $vhost = &vhost();
+    my $vhost = vhost();
 
     # For all serial modes except disconnected, it needs a path set
     # before it can be activated, otherwise it errors.
     if ($vmc{SessionType} eq 'WriteLock') {
-        my ($ISerialPort, $port) = &io_ser_callout();
-        my $mode = &getsel_combo($gui{d}{Edit}{cboxIOSerialmode}, 0);
+        my ($ISerialPort, $port) = io_ser_callout();
+        my $mode = getsel_combo($gui{d}{Edit}{cboxIOSerialmode}, 0);
 
         if ($mode eq 'RawFile') {
             $$vhost{os} =~ m/^WINDOWS/i ? $gui{d}{Edit}{entryIOSerialpath}->set_text("\%temp\%\\raw-$vmc{Name}-ser" . ($port + 1))
@@ -118,17 +118,17 @@ sub io_ser_path_generate {
 # The serial port mode
 sub io_ser_mode {
     my ($widget) = @_;
-    my $vhost = &vhost();
+    my $vhost = vhost();
 
     # For all serial modes except disconnected, it needs a path set before it can be activated, otherwise it errors.
     if ($vmc{SessionType} eq 'WriteLock') {
-        my ($ISerialPort, $port) = &io_ser_callout();
-        my $mode = &getsel_combo($widget, 0);
+        my ($ISerialPort, $port) = io_ser_callout();
+        my $mode = getsel_combo($widget, 0);
 
         # If the path is empty, try to generate one to avoid errors as every mode except disconnected
         # cannot be empty.
-        if (ISerialPort_getPath($ISerialPort) eq '') { &io_ser_path_generate(); }
-        ISerialPort_setHostMode($ISerialPort, &getsel_combo($widget, 0));
+        if (ISerialPort_getPath($ISerialPort) eq '') { io_ser_path_generate(); }
+        ISerialPort_setHostMode($ISerialPort, getsel_combo($widget, 0));
     }
 }
 
@@ -137,7 +137,7 @@ sub io_ser_make_pipe {
     my ($widget) = @_;
 
     if ($vmc{SessionType} eq 'WriteLock') {
-        my ($ISerialPort, $port) = &io_ser_callout();
+        my ($ISerialPort, $port) = io_ser_callout();
         ISerialPort_setServer($ISerialPort, !$widget->get_active());
     }
 }
@@ -150,7 +150,7 @@ sub io_ser_path {
 
         my $path = $widget->get_text();
         if ($path) {
-            my ($ISerialPort, $port) = &io_ser_callout();
+            my ($ISerialPort, $port) = io_ser_callout();
             ISerialPort_setPath($ISerialPort, $path);
         }
     }
@@ -163,8 +163,8 @@ sub io_ser_num {
     my ($widget) = @_;
 
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $portnum = &getsel_combo($widget, 0);
-        my ($ISerialPort, $port) = &io_ser_callout();
+        my $portnum = getsel_combo($widget, 0);
+        my ($ISerialPort, $port) = io_ser_callout();
 
         if ($portnum eq 'COM1') {
             $gui{d}{Edit}{entryIOSerialirq}->set_text('4');
@@ -184,8 +184,8 @@ sub io_ser_num {
         }
 
         if ($portnum ne 'Custom') {
-            &io_ser_irq($gui{d}{Edit}{entryIOSerialirq});
-            &io_ser_port($gui{d}{Edit}{entryIOSerialio});
+            io_ser_irq($gui{d}{Edit}{entryIOSerialirq});
+            io_ser_port($gui{d}{Edit}{entryIOSerialio});
             $gui{d}{Edit}{entryIOSerialirq}->set_sensitive(0);
             $gui{d}{Edit}{entryIOSerialio}->set_sensitive(0);
         }
@@ -201,14 +201,14 @@ sub io_ser_uart {
     my ($widget) = @_;
 
     if ($vmc{SessionType} eq 'WriteLock') {
-        my ($ISerialPort, $port) = &io_ser_callout();
-        ISerialPort_setUartType($ISerialPort, &getsel_combo($widget, 1));
+        my ($ISerialPort, $port) = io_ser_callout();
+        ISerialPort_setUartType($ISerialPort, getsel_combo($widget, 1));
     }
 }
 
 # Gets the current working serial port number
 sub io_ser_callout {
-    my $port = &getsel_combo($gui{d}{Edit}{cboxIOSerial}, 1);
+    my $port = getsel_combo($gui{d}{Edit}{cboxIOSerial}, 1);
 
     if ($vmc{SessionType} eq 'WriteLock') {
         my $ISerialPort = IMachine_getSerialPort($vmc{IMachine}, $port);

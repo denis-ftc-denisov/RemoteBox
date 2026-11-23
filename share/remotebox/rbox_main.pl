@@ -7,15 +7,15 @@ our (%gui, %prefs, $endpoint, $fault);
 my %cmdopts=();
 $endpoint = 'http://localhost:18083';
 $fault = sub{}; # Do nothing with faults until connected
-&rbprefs_get(); # Retrieve and set preferences
-&restore_window_pos($gui{d}{Main}{win});
-&addrow_msg_log("Welcome to $gui{appname} $gui{appver}");
+rbprefs_get(); # Retrieve and set preferences
+restore_window_pos($gui{d}{Main}{win});
+addrow_msg_log("Welcome to $gui{appname} $gui{appver}");
 getopts("H:u:p:h", \%cmdopts);
 # Set Disconnected State
-&sens_unselected();
-&sens_connect(0);
-&clr_list_guest();
-&clr_vhost(); # Clear vhost so values are not retained on subsequent connections
+sens_unselected();
+sens_connect(0);
+clr_list_guest();
+clr_vhost(); # Clear vhost so values are not retained on subsequent connections
 
 if($cmdopts{h}) {
     print STDERR <<USAGE;
@@ -30,22 +30,22 @@ Usage:
 USAGE
     exit 0;
 }
-elsif ($cmdopts{H}) { &show_dialog_connect('CMDAUTO'); } # Command line parameter based login
-elsif ($prefs{AUTOCONNPROF}) { &show_dialog_connect('PROFAUTO'); } # Profile based automatic login
+elsif ($cmdopts{H}) { show_dialog_connect('CMDAUTO'); } # Command line parameter based login
+elsif ($prefs{AUTOCONNPROF}) { show_dialog_connect('PROFAUTO'); } # Profile based automatic login
 $0 = 'RemoteBox VirtualBox Client';
 $gui{d}{Main}{win}->show_all();
 Gtk3->main;
 
 sub quit_remotebox {
-    &save_window_pos($gui{d}{Main}{win}); # Also saves the main preferences
-    &virtualbox_logoff();
+    save_window_pos($gui{d}{Main}{win}); # Also saves the main preferences
+    virtualbox_logoff();
     Gtk3->main_quit;
 }
 
 # Attempts to logon or fails with a dialog
 sub virtualbox_logon {
     my ($url, $user, $password) = @_;
-    &virtualbox_logoff(); # Ensure we disconnect from an existing connection
+    virtualbox_logoff(); # Ensure we disconnect from an existing connection
     $endpoint = $url;
     $fault = \&vboxlogonerror;
     $gui{websn} = IWebsessionManager_logon($user, $password);
@@ -54,7 +54,7 @@ sub virtualbox_logon {
     if ($gui{websn}) {
         $fault = \&vboxerror; # Install the fault capture
         $gui{servermem} = Glib::Timeout->add(30000, \&update_server_membar);
-        &update_server_membar();
+        update_server_membar();
         return 1;
     }
 
@@ -86,10 +86,10 @@ sub virtualbox_logoff {
     }
 
     # Return GUI to a disconnected state
-    &sens_unselected();
-    &sens_connect(0);
-    &clr_list_guest();
-    &clr_vhost(); # Clear vhost so values are not retained on subsequent connections
+    sens_unselected();
+    sens_connect(0);
+    clr_list_guest();
+    clr_vhost(); # Clear vhost so values are not retained on subsequent connections
 }
 
 # Fill in the fields when a profile is selected
@@ -118,7 +118,7 @@ sub show_dialog_connect {
         $gui{d}{Connect}{entryUser}->set_text($cmdopts{u}) if ($cmdopts{u});
         $gui{d}{Connect}{entryPass}->set_text($cmdopts{p}) if ($cmdopts{p});
         $response = 'ok';
-        &addrow_msg_log("Starting automatic login (command line) to $cmdopts{H}");
+        addrow_msg_log("Starting automatic login (command line) to $cmdopts{H}");
     }
     elsif ($widget eq 'PROFAUTO') {
         my $iter = $gui{d}{Connect}{lstoreProfile}->get_iter_first();
@@ -130,7 +130,7 @@ sub show_dialog_connect {
                 $gui{d}{Connect}{entryUser}->set_text($profile[2]);
                 $gui{d}{Connect}{entryPass}->set_text($profile[3]);
                 $response = 'ok';
-                &addrow_msg_log("Starting automatic login (profile) to $profile[1]");
+                addrow_msg_log("Starting automatic login (profile) to $profile[1]");
                 last;
             }
 
@@ -147,8 +147,8 @@ sub show_dialog_connect {
     $gui{d}{Connect}{dialog}->get_display->flush;
 
     if ($response eq 'ok') {
-        my $url = &strim($gui{d}{Connect}{entryURL}->get_text());
-        my $user = &strim($gui{d}{Connect}{entryUser}->get_text());
+        my $url = strim($gui{d}{Connect}{entryURL}->get_text());
+        my $user = strim($gui{d}{Connect}{entryUser}->get_text());
         $url = $endpoint if (!$url);
         $url =~ s/(\/)+$//g; # Remove all trailing
         $url = "http://$url" if ($url !~ m/^.+:\/\//);
@@ -157,39 +157,39 @@ sub show_dialog_connect {
         $prefs{USER}{$user} = 'USER' if ($user);
 
         # If we got a successful logon
-        if (&virtualbox_logon($url, $user, $gui{d}{Connect}{entryPass}->get_text())) {
+        if (virtualbox_logon($url, $user, $gui{d}{Connect}{entryPass}->get_text())) {
             my $ver = IVirtualBox_getVersion($gui{websn});
 
             if (!$ver) {
                 # FIXME
-                &show_err_msg('connect', 0, "asasasasasas ($url)");
-                &virtualbox_logoff();
+                show_err_msg('connect', 0, "asasasasasas ($url)");
+                virtualbox_logoff();
             }
             else {
-                &addrow_msg_log("Logged into $endpoint", "Running VirtualBox $ver");
-                &show_err_msg('vboxver', $prefs{NOVERSIONWARNDIALOG}, "Detected VirtualBox Version: $ver") if ($ver !~ m/^7.2/);
-                my $vhost = &vhost();
+                addrow_msg_log("Logged into $endpoint", "Running VirtualBox $ver");
+                show_err_msg('vboxver', $prefs{NOVERSIONWARNDIALOG}, "Detected VirtualBox Version: $ver") if ($ver !~ m/^7.2/);
+                my $vhost = vhost();
 
                 if ($$vhost{vrdeextpack} =~ m/Built-in-VBoxVRDP/i) { $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (RDP)'); }
                 elsif ($$vhost{vrdeextpack} =~ m/vnc/i) {
                     $gui{d}{Main}{buttonDisplay}->set_label('_Guest Display (VNC)');
-                    &addrow_msg_log('Warning: The Oracle VirtualBox Extension Pack is not installed.', '* This pack is only available for Linux, Windows, Solaris and MacOS ', '* Features which require this extension pack will be non-functional or unavailable');
+                    addrow_msg_log('Warning: The Oracle VirtualBox Extension Pack is not installed.', '* This pack is only available for Linux, Windows, Solaris and MacOS ', '* Features which require this extension pack will be non-functional or unavailable');
                 }
                 else {
                     $gui{d}{Main}{buttonDisplay}->set_label('Guest Display Unavailable');
-                    &show_err_msg('noextensions', $prefs{NOEXTPACKWARNDIALOG});
+                    show_err_msg('noextensions', $prefs{NOEXTPACKWARNDIALOG});
                 }
 
                 if ($prefs{ADDADDITIONS}) {
                     if ($$vhost{additionsiso}) {
-                        my ($vol, $dir, $file) = &rsplitpath($$vhost{additionsiso});
-                        my $IMedium = &register_medium(undef, {type => 'DVD', mode => 'ReadOnly', basedir => $vol . $dir, file => $file});
-                        &addrow_msg_log('Warning: Could not automatically register the guest additions ISO with the VMM') if (!defined($IMedium));
+                        my ($vol, $dir, $file) = rsplitpath($$vhost{additionsiso});
+                        my $IMedium = register_medium(undef, {type => 'DVD', mode => 'ReadOnly', basedir => $vol . $dir, file => $file});
+                        addrow_msg_log('Warning: Could not automatically register the guest additions ISO with the VMM') if (!defined($IMedium));
                     }
                 }
 
-                &fill_list_guest();
-                &sens_connect(1);
+                fill_list_guest();
+                sens_connect(1);
             }
         }
     }
@@ -227,7 +227,7 @@ sub show_progress_window {
 
                 $gui{d}{Progress}{bar}->set_fraction($percent * 0.01);
                 if ($percent > 10 and $secsremaining > 0) {
-                    my $humantime = &secs_to_humantime($secsremaining);
+                    my $humantime = secs_to_humantime($secsremaining);
                     $gui{d}{Progress}{bar}->set_text("$percent% (About $humantime remaining)");
                 }
                 else { $gui{d}{Progress}{bar}->set_text("$percent%"); }
@@ -257,13 +257,13 @@ sub show_dialog_videohint {
     my $response = $gui{d}{CustomVideo}{dialog}->run();
     $gui{d}{CustomVideo}{dialog}->hide();
 
-    if ($response eq 'ok') { return [$gui{d}{CustomVideo}{sbVideoW}->get_value_as_int(), $gui{d}{CustomVideo}{sbVideoH}->get_value_as_int(), &getsel_combo($gui{d}{CustomVideo}{cboxVideoDepth}, 1)] }
+    if ($response eq 'ok') { return [$gui{d}{CustomVideo}{sbVideoW}->get_value_as_int(), $gui{d}{CustomVideo}{sbVideoH}->get_value_as_int(), getsel_combo($gui{d}{CustomVideo}{cboxVideoDepth}, 1)] }
     else { return [0,0,0]; }
 }
 
 # Shows a dialog with basic information about the VirtualBox server
 sub show_dialog_serverinfo {
-    &fill_list_serverinfo();
+    fill_list_serverinfo();
     $gui{d}{ServerInfo}{dialog}->show_all();
     $gui{d}{ServerInfo}{dialog}->run();
     $gui{d}{ServerInfo}{dialog}->hide();
@@ -271,8 +271,8 @@ sub show_dialog_serverinfo {
 
 # Displays a dialog with the contents of the logs for a specific guest
 sub show_dialog_log {
-    my $gref = &getsel_list_guest();
-    &fill_list_log($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    fill_list_log($$gref{IMachine});
     $gui{d}{GuestLog}{dialog}->set_title("$$gref{Name} Guest Logs");
     $gui{d}{GuestLog}{dialog}->show_all();
     $gui{d}{GuestLog}{dialog}->run();
@@ -280,13 +280,13 @@ sub show_dialog_log {
 }
 
 sub refresh_guest_logs {
-    my $gref = &getsel_list_guest();
-    &fill_list_log($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    fill_list_log($$gref{IMachine});
 }
 
 # Saves a guest log to a text file.
 sub guest_log_save {
-    my $gref = &getsel_list_guest();
+    my $gref = getsel_list_guest();
     my $lognum = $gui{d}{GuestLog}{notebookLog}->get_current_page(); # We choose the log number by the page number
     $gui{d}{LogFileChooser}{dialog}->set_current_name("$$gref{Name}_log$lognum" . '.txt');
     $gui{d}{LogFileChooser}{dialog}->set_current_folder($ENV{HOME}) if ($ENV{HOME});
@@ -304,9 +304,9 @@ sub guest_log_save {
             }
 
             close($guest_log_fh);
-            &addrow_msg_log("Guest log $lognum for $$gref{Name}, saved to $filename");
+            addrow_msg_log("Guest log $lognum for $$gref{Name}, saved to $filename");
         }
-        else { &show_err_msg('guestlogsave', 0, "\nFile: $filename\nError: $!"); }
+        else { show_err_msg('guestlogsave', 0, "\nFile: $filename\nError: $!"); }
     }
 }
 
@@ -328,17 +328,17 @@ sub save_msg_log {
             }
 
             close($msg_log_fh);
-            &addrow_msg_log("Saved the message log to: $filename");
+            addrow_msg_log("Saved the message log to: $filename");
         }
-        else { &show_err_msg('msglogsave', 0, "\nFile: $filename\nError: $!"); }
+        else { show_err_msg('msglogsave', 0, "\nFile: $filename\nError: $!"); }
     }
 }
 
 # Show the export appliance dialog
 sub show_dialog_exportappl {
-    my $gref = &getsel_list_guest();
-    my $vhost = &vhost();
-    my $fname = &rcatdir($$vhost{machinedir}, $$gref{Name});
+    my $gref = getsel_list_guest();
+    my $vhost = vhost();
+    my $fname = rcatdir($$vhost{machinedir}, $$gref{Name});
     $gui{d}{ExportAppl}{entryFile}->set_text($fname);
     $gui{d}{ExportAppl}{entryName}->set_text($$gref{Name});
     $gui{d}{ExportAppl}{tbDescription}->set_text(IMachine_getDescription($$gref{IMachine}));
@@ -352,16 +352,16 @@ sub show_dialog_exportappl {
         my $IStorageController = IMachine_getStorageControllerByName($$gref{IMachine}, $$attach{controller});
 
         if (IStorageController_getBus($IStorageController) eq 'USB') {
-            &show_err_msg('exportapplusb', 0);
+            show_err_msg('exportapplusb', 0);
             return;
         }
 
         next if (!$$attach{medium}); # Empty DVD drive etc
 
-        if (&imedium_has_property($$attach{medium}, 'CRYPT/KeyStore')) {
+        if (imedium_has_property($$attach{medium}, 'CRYPT/KeyStore')) {
             my $keyid = IMedium_getProperty($$attach{medium}, 'CRYPT/KeyId');
             if (!$used_key_ids{$keyid}) {
-                my $passwd = &show_dialog_decpasswd($$attach{medium}, $keyid);
+                my $passwd = show_dialog_decpasswd($$attach{medium}, $keyid);
                 if ($passwd) { $used_key_ids{$keyid} = $passwd; }
                 else { return; }
             }
@@ -372,11 +372,11 @@ sub show_dialog_exportappl {
         my $response = $gui{d}{ExportAppl}{dialog}->run();
 
         if ($response eq 'ok') {
-            if (!$gui{d}{ExportAppl}{entryFile}->get_text()) { &show_err_msg('invalidfile', 0); }
-            elsif (!$gui{d}{ExportAppl}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
+            if (!$gui{d}{ExportAppl}{entryFile}->get_text()) { show_err_msg('invalidfile', 0); }
+            elsif (!$gui{d}{ExportAppl}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
             else {
                 $gui{d}{ExportAppl}{dialog}->hide;
-                my $location = $gui{d}{ExportAppl}{entryFile}->get_text() . &getsel_combo($gui{d}{ExportAppl}{cboxFormat}, 2);
+                my $location = $gui{d}{ExportAppl}{entryFile}->get_text() . getsel_combo($gui{d}{ExportAppl}{cboxFormat}, 2);
                 my $IAppliance = IVirtualBox_createAppliance($gui{websn});
                 foreach my $key (keys(%used_key_ids)) { IAppliance_addPasswords($IAppliance, $key, $used_key_ids{$key}); }
                 my $IVirtualSystemDescription = IMachine_exportTo($$gref{IMachine}, $IAppliance, $location);
@@ -396,9 +396,9 @@ sub show_dialog_exportappl {
                 $exportopts[1] = 'ExportDVDImages' if ($gui{d}{ExportAppl}{checkISO}->get_active() == 1);
                 $exportopts[2] = 'StripAllNonNATMACs' if ($gui{d}{ExportAppl}{cboxMAC}->get_active() == 1);
                 $exportopts[2] = 'StripAllMACs' if ($gui{d}{ExportAppl}{cboxMAC}->get_active() == 2);
-                my $IProgress = IAppliance_write($IAppliance, &getsel_combo($gui{d}{ExportAppl}{cboxFormat}, 1), @exportopts, $location);
-                if ($IProgress) { &show_progress_window($IProgress, "Exporting Appliance $$gref{Name}", $gui{pb}{ProgressExport}); }
-                &addrow_msg_log("Exported $$gref{Name} as an appliance to $location");
+                my $IProgress = IAppliance_write($IAppliance, getsel_combo($gui{d}{ExportAppl}{cboxFormat}, 1), @exportopts, $location);
+                if ($IProgress) { show_progress_window($IProgress, "Exporting Appliance $$gref{Name}", $gui{pb}{ProgressExport}); }
+                addrow_msg_log("Exported $$gref{Name} as an appliance to $location");
             }
         }
         else { $gui{d}{ExportAppl}{dialog}->hide; }
@@ -407,7 +407,7 @@ sub show_dialog_exportappl {
 }
 
 sub show_dialog_snap_details {
-    my $snapref = &getsel_list_snapshots();
+    my $snapref = getsel_list_snapshots();
 
     if ($$snapref{ISnapshot}) { # This is needed in case a user double clicks on "Current State" which is not a real snapshot
         $gui{d}{Snapshot}{Name}->set_text(ISnapshot_getName($$snapref{ISnapshot}));
@@ -419,7 +419,7 @@ sub show_dialog_snap_details {
             my ($iter_s, $iter_e) = ($gui{d}{Snapshot}{tbDescription}->get_start_iter(), $gui{d}{Snapshot}{tbDescription}->get_end_iter());
             ISnapshot_setDescription($$snapref{ISnapshot}, $gui{d}{Snapshot}{tbDescription}->get_text($iter_s, $iter_e, 0));
             ISnapshot_setName($$snapref{ISnapshot}, $gui{d}{Snapshot}{Name}->get_text());
-            &fill_list_guest();
+            fill_list_guest();
         }
     }
 }
@@ -432,28 +432,28 @@ sub show_dialog_snapshot {
 
     if ($response eq 'ok') {
         my ($iter_s, $iter_e) = ($gui{d}{Snapshot}{tbDescription}->get_start_iter(), $gui{d}{Snapshot}{tbDescription}->get_end_iter());
-        &take_snapshot($gui{d}{Snapshot}{Name}->get_text(), $gui{d}{Snapshot}{tbDescription}->get_text($iter_s, $iter_e, 0));
+        take_snapshot($gui{d}{Snapshot}{Name}->get_text(), $gui{d}{Snapshot}{tbDescription}->get_text($iter_s, $iter_e, 0));
     }
 }
 
 # Discards the saved execution state for a guest
 sub discard_saved_state {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
     IMachine_discardSavedState($$sref{IMachine}, 'true');
-    &addrow_msg_log("Discarded saved execution state of $$gref{Name}");
-    &fill_list_guest();
+    addrow_msg_log("Discarded saved execution state of $$gref{Name}");
+    fill_list_guest();
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
 }
 
 # Performs a reset of the guest
 sub reset_guest {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         IConsole_reset(ISession_getConsole($$sref{ISession}));
-        &addrow_msg_log("Reset signal sent to $$gref{Name}");
+        addrow_msg_log("Reset signal sent to $$gref{Name}");
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -461,25 +461,25 @@ sub reset_guest {
 
 # Stops the guest
 sub stop_guest {
-    if ($prefs{STOPTYPE} eq 'ACPI') { &stop_guest_acpi(); }
-    elsif ($prefs{STOPTYPE} eq 'STATE') { &stop_guest_savestate(); }
-    else { &stop_guest_poweroff(); }
+    if ($prefs{STOPTYPE} eq 'ACPI') { stop_guest_acpi(); }
+    elsif ($prefs{STOPTYPE} eq 'STATE') { stop_guest_savestate(); }
+    else { stop_guest_poweroff(); }
 }
 
 # Stops a guest by issuing a hard poweroff
 sub stop_guest_poweroff {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         my $IConsole = ISession_getConsole($$sref{ISession});
 
         if (my $IProgress = IConsole_powerDown($IConsole)) { # Not cancellable
-            &show_progress_window($IProgress, "Powering off $$gref{Name}", $gui{pb}{ProgressPowerOff});
-            &addrow_msg_log("Power off signal sent to $$gref{Name}");
-            &fill_list_guest();
+            show_progress_window($IProgress, "Powering off $$gref{Name}", $gui{pb}{ProgressPowerOff});
+            addrow_msg_log("Power off signal sent to $$gref{Name}");
+            fill_list_guest();
         }
-        else { &addrow_msg_log("Warning: Power off signal could not be sent to $$gref{Name}"); }
+        else { addrow_msg_log("Warning: Power off signal could not be sent to $$gref{Name}"); }
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -487,13 +487,13 @@ sub stop_guest_poweroff {
 
 # Tries to stop a guest by sending the ACPI shutdown signal
 sub stop_guest_acpi {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         IConsole_powerButton(ISession_getConsole($$sref{ISession}));
-        &addrow_msg_log("ACPI shutdown signal sent to $$gref{Name}", "* Shutdown is not guaranteed as it depends on the OS and its configuration");
-        &fill_list_guest();
+        addrow_msg_log("ACPI shutdown signal sent to $$gref{Name}", "* Shutdown is not guaranteed as it depends on the OS and its configuration");
+        fill_list_guest();
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -501,16 +501,16 @@ sub stop_guest_acpi {
 
 # Stops a guest and save it's execution state
 sub stop_guest_savestate {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         if (my $IProgress = IMachine_saveState($$sref{IMachine})) { # Not cancellable
-            &show_progress_window($IProgress, "Saving execution state of $$gref{Name}", $gui{pb}{ProgressStateSave});
-            &addrow_msg_log("Execution state of $$gref{Name} saved");
-            &fill_list_guest();
+            show_progress_window($IProgress, "Saving execution state of $$gref{Name}", $gui{pb}{ProgressStateSave});
+            addrow_msg_log("Execution state of $$gref{Name} saved");
+            fill_list_guest();
         }
-        else { &addrow_msg_log("Warning: Execution state of $$gref{Name} could not be saved"); }
+        else { addrow_msg_log("Warning: Execution state of $$gref{Name} could not be saved"); }
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -518,13 +518,13 @@ sub stop_guest_savestate {
 
 # Pauses the execution of the guest
 sub pause_guest {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         IConsole_pause(ISession_getConsole($$sref{ISession}));
-        &addrow_msg_log("Paused the execution of $$gref{Name}");
-        &fill_list_guest();
+        addrow_msg_log("Paused the execution of $$gref{Name}");
+        fill_list_guest();
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -532,13 +532,13 @@ sub pause_guest {
 
 # Resumes the execution state for a guest that has one saved
 sub resume_guest {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         IConsole_resume(ISession_getConsole($$sref{ISession}));
-        &addrow_msg_log("Resumed the execution state of $$gref{Name}");
-        &fill_list_guest();
+        addrow_msg_log("Resumed the execution state of $$gref{Name}");
+        fill_list_guest();
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -546,7 +546,7 @@ sub resume_guest {
 
 # Starts a guest
 sub start_guest {
-    my $gref = &getsel_list_guest();
+    my $gref = getsel_list_guest();
     my $ISession = IWebsessionManager_getSessionObject($gui{websn});
     return if (ISession_getState($ISession) ne 'Unlocked');
 
@@ -555,31 +555,31 @@ sub start_guest {
     my $started = 0;
 
     if ($IProgress) { # Is Cancellable
-        my $resultcode = &show_progress_window($IProgress, "Starting guest $$gref{Name}", $gui{pb}{ProgressStart});
+        my $resultcode = show_progress_window($IProgress, "Starting guest $$gref{Name}", $gui{pb}{ProgressStart});
 
-        if (IProgress_getCanceled($IProgress) eq 'true') { &addrow_msg_log("Starting guest $$gref{Name} cancelled"); }
+        if (IProgress_getCanceled($IProgress) eq 'true') { addrow_msg_log("Starting guest $$gref{Name} cancelled"); }
         elsif ($resultcode != 0) {
             my $IVirtualBoxErrorInfo = IProgress_getErrorInfo($IProgress);
-            &show_err_msg('startguest', 0, "Guest: $$gref{Name}\nCode: $resultcode\nError:\n" . IVirtualBoxErrorInfo_getText($IVirtualBoxErrorInfo));
+            show_err_msg('startguest', 0, "Guest: $$gref{Name}\nCode: $resultcode\nError:\n" . IVirtualBoxErrorInfo_getText($IVirtualBoxErrorInfo));
         }
         else {
             $started = 1;
-            &addrow_msg_log("Start signal sent to $$gref{Name}");
+            addrow_msg_log("Start signal sent to $$gref{Name}");
             my @IMediumAttachment = IMachine_getMediumAttachments($$gref{IMachine});
             my %used_key_ids; # Key IDs can only be asked for once, we keep a used list here
 
             foreach my $attach (@IMediumAttachment) { # Determine if we have anything encrypted and prompt for password
                 next if ($$attach{type} ne 'HardDisk');
 
-                if (&imedium_has_property($$attach{medium}, 'CRYPT/KeyStore')) {
+                if (imedium_has_property($$attach{medium}, 'CRYPT/KeyStore')) {
                     my $keyid = IMedium_getProperty($$attach{medium}, 'CRYPT/KeyId');
 
                     if (!$used_key_ids{$keyid}) {
-                        my $passwd = &show_dialog_decpasswd($$attach{medium}, $keyid);
+                        my $passwd = show_dialog_decpasswd($$attach{medium}, $keyid);
 
                         if ($passwd) {
-                            my $gref = &getsel_list_guest();
-                            my $sref = &get_session($$gref{IMachine});
+                            my $gref = getsel_list_guest();
+                            my $sref = get_session($$gref{IMachine});
 
                             if ($$sref{Lock} eq 'Shared') {
                                 my $IConsole = ISession_getConsole($$sref{ISession});
@@ -591,23 +591,23 @@ sub start_guest {
                         }
                         else {
                             $started = 0;
-                            &stop_guest_poweroff();
+                            stop_guest_poweroff();
                         }
                     }
                 }
             }
         }
     }
-    else { &show_err_msg('sessionopen', 0, " ($$gref{Name})"); }
+    else { show_err_msg('sessionopen', 0, " ($$gref{Name})"); }
 
     ISession_unlockMachine($ISession) if (ISession_getState($ISession) ne 'Unlocked');
-    &open_remote_display() if ($prefs{RDPAUTOOPEN} and $started);
-    &fill_list_guest() if ($started);
+    open_remote_display() if ($prefs{RDPAUTOOPEN} and $started);
+    fill_list_guest() if ($started);
 }
 
 # Removes a guest, optionally deleting associated files
 sub remove_guest {
-    my $gref = &getsel_list_guest();
+    my $gref = getsel_list_guest();
     $gui{d}{RemoveGuest}{dialog}->show_all();
     my $response = $gui{d}{RemoveGuest}{dialog}->run();
     $gui{d}{RemoveGuest}{dialog}->hide;
@@ -615,96 +615,96 @@ sub remove_guest {
     if ($response eq '1') { # Remove Only
         IMachine_unregister($$gref{IMachine}, 'DetachAllReturnNone');
         unlink("$gui{THUMBDIR}/$$gref{Uuid}.png") if (-e "$gui{THUMBDIR}/$$gref{Uuid}.png"); # Remove screenshot icon
-        &addrow_msg_log("Removed $$gref{Name} from the VirtualBox registry");
-        &fill_list_guest();
+        addrow_msg_log("Removed $$gref{Name} from the VirtualBox registry");
+        fill_list_guest();
     }
     elsif ($response eq '2') { # Delete all
         my @IMedium = IMachine_unregister($$gref{IMachine}, 'DetachAllReturnHardDisksOnly');
 
         foreach my $medium (@IMedium) { # Is cancellable
             my $IProgress = IMachine_deleteConfig($$gref{IMachine}, $medium);
-            &show_progress_window($IProgress, 'Deleting hard disk image', $gui{pb}{ProgressMediaDelete});
-            if (IProgress_getCanceled($IProgress) eq 'true') { &addrow_msg_log('Cancelled hard disk deletion'); }
+            show_progress_window($IProgress, 'Deleting hard disk image', $gui{pb}{ProgressMediaDelete});
+            if (IProgress_getCanceled($IProgress) eq 'true') { addrow_msg_log('Cancelled hard disk deletion'); }
         }
 
         unlink("$gui{THUMBDIR}/$$gref{Uuid}.png") if (-e "$gui{THUMBDIR}/$$gref{Uuid}.png"); # Remove screenshot icon
-        &addrow_msg_log("Removed and deleted $$gref{Name} from the VirtualBox registry");
-        &fill_list_guest();
+        addrow_msg_log("Removed and deleted $$gref{Name} from the VirtualBox registry");
+        fill_list_guest();
     }
 }
 
 # Restores a guest to a snapshot state
 sub restore_snapshot {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Type} eq 'WriteLock') { # Not cancellable
-        my $snapref = &getsel_list_snapshots();
+        my $snapref = getsel_list_snapshots();
         my $IProgress = IMachine_restoreSnapshot($$sref{IMachine}, $$snapref{ISnapshot});
-        &show_progress_window($IProgress, 'Restoring snapshot', $gui{pb}{ProgressSnapshotRestore});
-        &addrow_msg_log("Restored snapshot of $$gref{Name}");
+        show_progress_window($IProgress, 'Restoring snapshot', $gui{pb}{ProgressSnapshotRestore});
+        addrow_msg_log("Restored snapshot of $$gref{Name}");
     }
-    else { &show_err_msg('restorefail', 0, " ($$gref{Name})"); }
+    else { show_err_msg('restorefail', 0, " ($$gref{Name})"); }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
-    &fill_list_guest(); # This also refreshes the snapshot list
+    fill_list_guest(); # This also refreshes the snapshot list
 }
 
 # Deletes a guest snapshot
 sub delete_snapshot {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} ne 'None') {
-        my $snapref = &getsel_list_snapshots();
+        my $snapref = getsel_list_snapshots();
 
-        if (ISnapshot_getChildrenCount($$snapref{ISnapshot}) > 1) { &show_err_msg('snapdelchild', 0, " ($$gref{Name})"); }
+        if (ISnapshot_getChildrenCount($$snapref{ISnapshot}) > 1) { show_err_msg('snapdelchild', 0, " ($$gref{Name})"); }
         else { # Not cancellable
             my $snapuuid = ISnapshot_getId($$snapref{ISnapshot});
             my $IProgress = IMachine_deleteSnapshot($$sref{IMachine}, $snapuuid);
-            &show_progress_window($IProgress, 'Deleting snapshot', $gui{pb}{ProgressSnapshotDiscard}) if ($IProgress);
-            &addrow_msg_log("Deleted snapshot of $$gref{Name}");
+            show_progress_window($IProgress, 'Deleting snapshot', $gui{pb}{ProgressSnapshotDiscard}) if ($IProgress);
+            addrow_msg_log("Deleted snapshot of $$gref{Name}");
         }
     }
-    else { &show_err_msg('snapdelete', 0, " ($$gref{Name})"); }
+    else { show_err_msg('snapdelete', 0, " ($$gref{Name})"); }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
-    &fill_list_guest(); # This also refreshes the snapshot list
+    fill_list_guest(); # This also refreshes the snapshot list
 }
 
 # Takes a snapshot of a guest
 sub take_snapshot {
     my ($name, $description) = @_;
     $name = 'Snapshot' if (!$name);
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} ne 'None') { # Not cancellable
         my ($snapid, $IProgress) = IMachine_takeSnapshot($$sref{IMachine}, $name, $description, 'true');
-        &show_progress_window($IProgress, 'Taking snapshot', $gui{pb}{ProgressSnapshotCreate}) if ($IProgress);
-        &addrow_msg_log("Created snapshot of $$gref{Name} called $name");
+        show_progress_window($IProgress, 'Taking snapshot', $gui{pb}{ProgressSnapshotCreate}) if ($IProgress);
+        addrow_msg_log("Created snapshot of $$gref{Name} called $name");
     }
-    else { &show_err_msg('snapshotfail', 0, " ($$gref{Name})"); }
+    else { show_err_msg('snapshotfail', 0, " ($$gref{Name})"); }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
-    &fill_list_guest(); # This also refreshes the snapshot list
+    fill_list_guest(); # This also refreshes the snapshot list
 }
 
 # Attempts to open the remote display by calling the RDP/VNC client
 sub open_remote_display {
-    my $vhost = &vhost();
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $vhost = vhost();
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         my $IConsole = ISession_getConsole($$sref{ISession});
         my $IVRDEServer = IMachine_getVRDEServer($$gref{IMachine});
-        my $bindaddress = &strim(IVRDEServer_getVRDEProperty($IVRDEServer, 'TCP/Address'));
+        my $bindaddress = strim(IVRDEServer_getVRDEProperty($IVRDEServer, 'TCP/Address'));
         my $IVRDEServerInfo = IConsole_getVRDEServerInfo($IConsole);
 
         for (1..5) { # Wait up to 5 seconds for the VRDE server to start
             last if ($$IVRDEServerInfo{port} != -1);
-            &addrow_msg_log("Waiting on RDP/VNC service to be available for $$gref{Name}");
+            addrow_msg_log("Waiting on RDP/VNC service to be available for $$gref{Name}");
             $IVRDEServerInfo = IConsole_getVRDEServerInfo($IConsole);
             sleep 1;
         }
@@ -712,7 +712,7 @@ sub open_remote_display {
         if ($$IVRDEServerInfo{port} > 0) {
             if ($prefs{AUTOHINTDISP}) {
                 IDisplay_setVideoModeHint(IConsole_getDisplay($IConsole), 0, 1, 0, 0, 0, $prefs{AUTOHINTDISPX}, $prefs{AUTOHINTDISPY}, $prefs{AUTOHINTDISPD});
-                &addrow_msg_log("Sent video hint ($prefs{AUTOHINTDISPX}x$prefs{AUTOHINTDISPY}:$prefs{AUTOHINTDISPD}) to $$gref{Name}");
+                addrow_msg_log("Sent video hint ($prefs{AUTOHINTDISPX}x$prefs{AUTOHINTDISPY}:$prefs{AUTOHINTDISPD}) to $$gref{Name}");
             }
 
             my $dst = $bindaddress ? $bindaddress : $endpoint; # If there's a specific bind address for the guest use that
@@ -730,10 +730,10 @@ sub open_remote_display {
             $dispcmd =~ s/%Y/$prefs{AUTOHINTDISPY}/g;
             $dispcmd =~ s/%D/$prefs{AUTOHINTDISPD}/g;
             ($^O =~ m/MSWin/) ? $dispcmd .= ' >nul' : $dispcmd .= ' &';
-            &addrow_msg_log("Request sent to open the display of $$gref{Name} at address $dst:$$IVRDEServerInfo{port}", $dispcmd);
+            addrow_msg_log("Request sent to open the display of $$gref{Name} at address $dst:$$IVRDEServerInfo{port}", $dispcmd);
             system("$dispcmd");
         }
-        else { &show_err_msg('remotedisplay', 0, " ($$gref{Name})"); }
+        else { show_err_msg('remotedisplay', 0, " ($$gref{Name})"); }
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -763,12 +763,12 @@ sub show_rmb_menu {
 
 # Called when parent DVD menu is highlighted. Cheaper than calling each time main menu is opened
 sub fill_menu_optical {
-    my $vhost = &vhost();
-    my $menu = &gui_new_menu();
+    my $vhost = vhost();
+    my $menu = gui_new_menu();
     $gui{mi}{DVD}->set_submenu($menu);
-    my $itema = &gui_new_menu_item_no_mnemonic('Add Optical Disc Image', 'cd_add_16px.png', $menu);
+    my $itema = gui_new_menu_item_no_mnemonic('Add Optical Disc Image', 'cd_add_16px.png', $menu);
     $itema->signal_connect('activate' => \&show_remote_filechooser, {title => 'Choose Disc Image', entrywidget => '', mode => 'file', filter => '^.*\.iso$', callback => \&devices_menu_add_optical_disc});
-    my $itemb = &gui_new_menu_item_no_mnemonic('Eject Optical Disc', 'cd_clear_16px.png', $menu);
+    my $itemb = gui_new_menu_item_no_mnemonic('Eject Optical Disc', 'cd_clear_16px.png', $menu);
     $itemb->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => '', type => 'DVD'});
     $menu->append(Gtk3::SeparatorMenuItem->new());
 
@@ -777,17 +777,17 @@ sub fill_menu_optical {
 
         foreach my $pdvd (@{$$vhost{dvd}}) {
             $added = 1;
-            my $item = &gui_new_menu_item_no_mnemonic('<Server Drive> ' . IMedium_getLocation($pdvd), 'cd_16px.png', $menu);
+            my $item = gui_new_menu_item_no_mnemonic('<Server Drive> ' . IMedium_getLocation($pdvd), 'cd_16px.png', $menu);
             $item->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => $pdvd, type => 'DVD'});
         }
 
         $menu->append(Gtk3::SeparatorMenuItem->new()) if ($added); # Only add separator if a host drive was added
     }
 
-    my $IMediumRef = &get_all_media('DVD');
+    my $IMediumRef = get_all_media('DVD');
 
     foreach (sort { lc($$IMediumRef{$a}) cmp lc($$IMediumRef{$b}) } (keys %$IMediumRef)) {
-        my $item = &gui_new_menu_item_no_mnemonic($$IMediumRef{$_}, 'cd_16px.png', $menu);
+        my $item = gui_new_menu_item_no_mnemonic($$IMediumRef{$_}, 'cd_16px.png', $menu);
         $item->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => $_, type => 'DVD'});
     }
 }
@@ -795,11 +795,11 @@ sub fill_menu_optical {
 # Called when parent USB menu is highlighted. Cheaper than calling each time machine menu is opened
 sub fill_menu_usb {
     my %connected;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
-        my $usbmenu =  &gui_new_menu();
+        my $usbmenu =  gui_new_menu();
         $gui{mi}{USB}->set_submenu($usbmenu);
         my @IHostUSBDevices = IHost_getUSBDevices(IVirtualBox_getHost($gui{websn}));
         my @USBDevices = IConsole_getUSBDevices(ISession_getConsole($$sref{ISession}));
@@ -807,11 +807,11 @@ sub fill_menu_usb {
         foreach my $IUSBDevice (@USBDevices) { $connected{IUSBDevice_getId($IUSBDevice)} = 1; }
 
         foreach my $usb (@IHostUSBDevices) {
-            my $label = &usb_make_label(IUSBDevice_getManufacturer($usb),
+            my $label = usb_make_label(IUSBDevice_getManufacturer($usb),
                                         IUSBDevice_getProduct($usb),
                                         sprintf('%04x', IUSBDevice_getRevision($usb)));
 
-            my $item = &gui_new_check_menu_item($label, $usbmenu);
+            my $item = gui_new_check_menu_item($label, $usbmenu);
             my $usbid = IUSBDevice_getId($usb);
             $item->set_active(1) if $connected{$usbid};
             $item->signal_connect(activate => \&mount_usb_online, [$usbid, $label]);
@@ -823,23 +823,23 @@ sub fill_menu_usb {
 
 # Fills the menu with the number of hot pluggable CPUs
 sub fill_menu_cpu {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
-        my $cpumenu = &gui_new_menu();
+        my $cpumenu = gui_new_menu();
         $gui{mi}{HotPlugCPU}->set_submenu($cpumenu);
         my $cpucount = IMachine_getCPUCount($$sref{IMachine});
 
         # CPU 0 is special - it can never be detached.
-        my $item = &gui_new_check_menu_item('vCPU 0', $cpumenu);
+        my $item = gui_new_check_menu_item('vCPU 0', $cpumenu);
         $item->set_active(1);
         $item->set_sensitive(0);
         $item->set_tooltip_text('vCPU 0 is never hot pluggable');
 
         foreach my $cpunum (1..($cpucount - 1)) {
-            my $item = &gui_new_check_menu_item("vCPU $cpunum", $cpumenu);
-            $item->set_active(1) if (&bl(IMachine_getCPUStatus($$sref{IMachine}, $cpunum)));
+            my $item = gui_new_check_menu_item("vCPU $cpunum", $cpumenu);
+            $item->set_active(1) if (bl(IMachine_getCPUStatus($$sref{IMachine}, $cpunum)));
             $item->signal_connect(activate => \&mount_cpu_online, $cpunum);
         }
     }
@@ -850,22 +850,22 @@ sub fill_menu_cpu {
 # Attaches or detaches a processor whilst the guest is online
 sub mount_cpu_online {
     my ($widget, $cpunum) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         if ($widget->get_active()) {
             IMachine_hotPlugCPU($$sref{IMachine}, $cpunum);
-            &addrow_msg_log("Hot plugging vCPU $cpunum for $$gref{Name}.");
+            addrow_msg_log("Hot plugging vCPU $cpunum for $$gref{Name}.");
         }
         else {
             IMachine_hotUnplugCPU($$sref{IMachine}, $cpunum);
-            &addrow_msg_log("Hot Unplugging  vCPU $cpunum for $$gref{Name}.");
+            addrow_msg_log("Hot Unplugging  vCPU $cpunum for $$gref{Name}.");
         }
 
         IMachine_saveSettings($$sref{IMachine});
     }
-    else { &addrow_msg_log("Error: Could not change the status of CPU $cpunum for $$gref{Name}."); }
+    else { addrow_msg_log("Error: Could not change the status of CPU $cpunum for $$gref{Name}."); }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
 }
@@ -873,19 +873,19 @@ sub mount_cpu_online {
 # Attaches or detaches a USB device whilst the guest is online
 sub mount_usb_online {
     my ($widget, $dataref) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         my $IConsole = ISession_getConsole($$sref{ISession});
 
         if ($widget->get_active()) {
             IConsole_attachUSBDevice($IConsole, $$dataref[0]);
-            &addrow_msg_log("Attached USB device '$$dataref[1]' to $$gref{Name}.");
+            addrow_msg_log("Attached USB device '$$dataref[1]' to $$gref{Name}.");
         }
         else {
             IConsole_detachUSBDevice($IConsole, $$dataref[0]);
-            &addrow_msg_log("Detached USB device '$$dataref[1]' from $$gref{Name}.");
+            addrow_msg_log("Detached USB device '$$dataref[1]' from $$gref{Name}.");
         }
 
         IMachine_saveSettings($$sref{IMachine});
@@ -896,14 +896,14 @@ sub mount_usb_online {
 
 # Dynamically fills the floppy menu of the devices menu
 sub fill_menu_floppy {
-    my $gref = &getsel_list_guest();
-    my $vhost = &vhost();
-    my $menu = &gui_new_menu();
-    my $itema = &gui_new_menu_item_no_mnemonic('Add Floppy Disk Image', 'fd_add_16px.png', $menu);
+    my $gref = getsel_list_guest();
+    my $vhost = vhost();
+    my $menu = gui_new_menu();
+    my $itema = gui_new_menu_item_no_mnemonic('Add Floppy Disk Image', 'fd_add_16px.png', $menu);
     $itema->signal_connect('activate' => \&show_remote_filechooser, {title => 'Choose Floppy Image', entrywidget => '', mode => 'file', filter => '^.*\.img$', callback => \&devices_menu_add_floppy_disk});
-    my $itemb = &gui_new_menu_item_no_mnemonic('New Floppy Disk Image', 'fd_create_16px.png', $menu);
-    $itemb->signal_connect('activate' => \&show_dialog_create_floppy, {IMachine => $$gref{IMachine}, filename => &rcatfile($$vhost{machinedir}, 'Floppy-' . int(rand(999999))), callback => \&insert_removable_disk_first_drive});
-    my $itemc = &gui_new_menu_item_no_mnemonic('Eject Floppy Disk', 'fd_clear_16px.png', $menu);
+    my $itemb = gui_new_menu_item_no_mnemonic('New Floppy Disk Image', 'fd_create_16px.png', $menu);
+    $itemb->signal_connect('activate' => \&show_dialog_create_floppy, {IMachine => $$gref{IMachine}, filename => rcatfile($$vhost{machinedir}, 'Floppy-' . int(rand(999999))), callback => \&insert_removable_disk_first_drive});
+    my $itemc = gui_new_menu_item_no_mnemonic('Eject Floppy Disk', 'fd_clear_16px.png', $menu);
     $itemc->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => '', type => 'Floppy'});
     $menu->append(Gtk3::SeparatorMenuItem->new());
 
@@ -912,17 +912,17 @@ sub fill_menu_floppy {
 
         foreach my $pfloppy (@{$$vhost{floppy}}) {
             $added = 1;
-            my $item = &gui_new_menu_item_no_mnemonic('<Server Drive> ' . IMedium_getLocation($pfloppy), 'fd_16px.png', $menu);
+            my $item = gui_new_menu_item_no_mnemonic('<Server Drive> ' . IMedium_getLocation($pfloppy), 'fd_16px.png', $menu);
             $item->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => $pfloppy, type => 'Floppy'});
         }
 
         $menu->append(Gtk3::SeparatorMenuItem->new()) if ($added); # Only add separator if a host drive was added
     }
 
-    my $IMediumRef = &get_all_media('Floppy');
+    my $IMediumRef = get_all_media('Floppy');
 
     foreach (sort { lc($$IMediumRef{$a}) cmp lc($$IMediumRef{$b}) } (keys %$IMediumRef)) {
-        my $item = &gui_new_menu_item_no_mnemonic($$IMediumRef{$_}, 'fd_16px.png', $menu);
+        my $item = gui_new_menu_item_no_mnemonic($$IMediumRef{$_}, 'fd_16px.png', $menu);
         $item->signal_connect('activate' => \&insert_removable_disk_first_drive, {IMedium => $_, type => 'Floppy'});
     }
 
@@ -932,48 +932,48 @@ sub fill_menu_floppy {
 # Called from the devices menu
 sub devices_menu_add_floppy_disk {
     my ($basedir, $file) = @_;
-    my $IMedium = &register_medium(undef, {type => 'Floppy', mode => 'ReadWrite', basedir => $basedir, file => $file});
-    &insert_removable_disk_first_drive(undef, {IMedium => $IMedium, type => 'Floppy'}) if ($IMedium);
+    my $IMedium = register_medium(undef, {type => 'Floppy', mode => 'ReadWrite', basedir => $basedir, file => $file});
+    insert_removable_disk_first_drive(undef, {IMedium => $IMedium, type => 'Floppy'}) if ($IMedium);
 }
 
 # Called from the devices menu
 sub devices_menu_add_optical_disc {
     my ($basedir, $file) = @_;
-    my $IMedium = &register_medium(undef, {type => 'DVD', mode => 'ReadOnly', basedir => $basedir, file => $file});
-    &insert_removable_disk_first_drive(undef, {IMedium => $IMedium, type => 'DVD'}) if ($IMedium);
+    my $IMedium = register_medium(undef, {type => 'DVD', mode => 'ReadOnly', basedir => $basedir, file => $file});
+    insert_removable_disk_first_drive(undef, {IMedium => $IMedium, type => 'DVD'}) if ($IMedium);
 }
 
 # Inserts a removable in the first drive found
 sub insert_removable_disk_first_drive {
     my ($widget, $medium) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
     my @IMediumAttachment = IMachine_getMediumAttachments($$sref{IMachine});
     my $found = 0;
 
     foreach my $attach (@IMediumAttachment) {
         next if ($$attach{type} ne $$medium{type});
         IMachine_mountMedium($$sref{IMachine}, $$attach{controller}, $$attach{port}, $$attach{device}, $$medium{IMedium}, 0);
-        &onsel_list_guest() if ($gui{d}{Main}{treeviewGuest}->get_selection->get_selected());
+        onsel_list_guest() if ($gui{d}{Main}{treeviewGuest}->get_selection->get_selected());
         $found = 1;
-        &addrow_msg_log("Changed $$medium{type} medium for $$gref{Name}");
+        addrow_msg_log("Changed $$medium{type} medium for $$gref{Name}");
         last;
     }
 
-    &show_err_msg('nodrive', 0) if ($$medium{type} eq 'DVD' and !$found);
-    &show_err_msg('nofloppydrive', 0) if ($$medium{type} eq 'Floppy' and !$found);
+    show_err_msg('nodrive', 0) if ($$medium{type} eq 'DVD' and !$found);
+    show_err_msg('nofloppydrive', 0) if ($$medium{type} eq 'Floppy' and !$found);
     IMachine_saveSettings($$sref{IMachine});
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
 }
 
 sub keyboard_CAD {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         my $IKeyboard = IConsole_getKeyboard(ISession_getConsole($$sref{ISession}));
         IKeyboard_putCAD($IKeyboard);
-        &addrow_msg_log("Keyboard sequence Ctrl-Alt-Delete sent to $$gref{Name}");
+        addrow_msg_log("Keyboard sequence Ctrl-Alt-Delete sent to $$gref{Name}");
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -982,13 +982,13 @@ sub keyboard_CAD {
 # Attempts to release any pressed keys if the host and the guest become out of sync
 sub keyboard_releasekeys {
     my ($widget) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{IMachine}) {
         my $IKeyboard = IConsole_getKeyboard(ISession_getConsole($$sref{ISession}));
         IKeyboard_releaseKeys($IKeyboard);
-        &addrow_msg_log("Keyboard release keys signal to $$gref{Name}");
+        addrow_msg_log("Keyboard release keys signal to $$gref{Name}");
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -997,13 +997,13 @@ sub keyboard_releasekeys {
 # Sends a sequence of keyboard scan codes depending on the option chosen
 sub keyboard_send {
     my ($widget, $scancodes) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{IMachine}) {
         my $IKeyboard = IConsole_getKeyboard(ISession_getConsole($$sref{ISession}));
         IKeyboard_putScancode($IKeyboard, $_) foreach (@{$$scancodes{codes}});
-        &addrow_msg_log("Keyboard sequence $$scancodes{desc} sent to $$gref{Name}");
+        addrow_msg_log("Keyboard sequence $$scancodes{desc} sent to $$gref{Name}");
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -1013,24 +1013,24 @@ sub keyboard_send {
 sub update_vidmeminfo {
     my $w = $gui{d}{CustomVideo}{sbVideoW}->get_value_as_int();
     my $h = $gui{d}{CustomVideo}{sbVideoH}->get_value_as_int();
-    my $d = &getsel_combo($gui{d}{CustomVideo}{cboxVideoDepth}, 1);
-    $gui{d}{CustomVideo}{labelVideoInfo}->set_text('This resolution requires a minimum of ' . &vram_needed($w, $h, $d) . 'MB of video memory');
+    my $d = getsel_combo($gui{d}{CustomVideo}{cboxVideoDepth}, 1);
+    $gui{d}{CustomVideo}{labelVideoInfo}->set_text('This resolution requires a minimum of ' . vram_needed($w, $h, $d) . 'MB of video memory');
 }
 
 # Sends a video mode hint to the guest
 sub send_video_hint {
     my ($widget, $res) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
-    if ($widget eq $gui{mi}{SetVideoCustom}) { $res = &show_dialog_videohint(); }
+    if ($widget eq $gui{mi}{SetVideoCustom}) { $res = show_dialog_videohint(); }
 
     # This checks if the custom res window got cancels as the resolution will be 0
     if ($$res[0] > 0) {
         if ($$sref{IMachine}) {
             my $IConsole = ISession_getConsole($$sref{ISession});
             IDisplay_setVideoModeHint(IConsole_getDisplay($IConsole), 0, 1, 0, 0, 0, $$res[0], $$res[1], $$res[2], 1);
-            &addrow_msg_log("Video hint ($$res[0]x$$res[1]:$$res[2]) sent to $$gref{Name}");
+            addrow_msg_log("Video hint ($$res[0]x$$res[1]:$$res[2]) sent to $$gref{Name}");
         }
     }
 
@@ -1087,18 +1087,18 @@ sub encrypt_disk {
 
     # Not allowed to have children
     if (IMedium_getChildren($IMedium)) {
-        &addrow_msg_log("Warning: The Medium $name cannot be encrypted because it has child media");
+        addrow_msg_log("Warning: The Medium $name cannot be encrypted because it has child media");
         return 1;
     }
 
     if (scalar(@mids) > 1) {
-        &addrow_msg_log("Warning: The Medium $name cannot be encrypted because it is attached to more than one guest");
+        addrow_msg_log("Warning: The Medium $name cannot be encrypted because it is attached to more than one guest");
         return 1;
     }
 
     my $IProgress = IMedium_changeEncryption($IMedium, $currentpasswd, $cipher, $newpasswd, $passwdid);
-    &addrow_msg_log("Enrypting the disk image $name with $cipher");
-    &show_progress_window($IProgress, "Encrypting Disk Image $name");
+    addrow_msg_log("Enrypting the disk image $name with $cipher");
+    show_progress_window($IProgress, "Encrypting Disk Image $name");
     return 0;
 }
 
@@ -1164,15 +1164,15 @@ sub sens_unselected {
 
 # Resets the guest icon back to the default
 sub reset_icon {
-    my $gref = &getsel_list_guest();
+    my $gref = getsel_list_guest();
     unlink("$gui{THUMBDIR}/$$gref{Uuid}.png") if (-e "$gui{THUMBDIR}/$$gref{Uuid}.png");
-    &fill_list_guest();
+    fill_list_guest();
 }
 
 # Takes a PNG screenshot of the guest
 sub screenshot {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
     $gui{d}{ScreenShotFileChooser}{dialog}->set_current_name("$$gref{Name}_screenshot.png");
     $gui{d}{ScreenShotFileChooser}{dialog}->set_current_folder($ENV{HOME}) if ($ENV{HOME});
     my $response = $gui{d}{ScreenShotFileChooser}{dialog}->run();
@@ -1190,11 +1190,11 @@ sub screenshot {
                     binmode SHOT; # Not normally needed for UNIX, but more portable
                     print SHOT $screenshot;
                     close(SHOT);
-                    &addrow_msg_log("Saved screenshot of $$gref{Name} as $filename.");
+                    addrow_msg_log("Saved screenshot of $$gref{Name} as $filename.");
                 }
-                else { &addrow_msg_log("Warning: Failed to save screenshot of $$gref{Name} as $filename"); }
+                else { addrow_msg_log("Warning: Failed to save screenshot of $$gref{Name} as $filename"); }
             }
-            else { &show_err_msg('noscreenshot', 0); }
+            else { show_err_msg('noscreenshot', 0); }
         }
     }
 
@@ -1204,8 +1204,8 @@ sub screenshot {
 # Sets the guest icon to a screenshot of the guest
 sub screenshot_to_icon {
     my ($widget) = @_;
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} eq 'Shared') {
         my $IConsole = ISession_getConsole($$sref{ISession});
@@ -1218,12 +1218,12 @@ sub screenshot_to_icon {
                 binmode ICON; # Not normally needed for UNIX, but more portable
                 print ICON $icon;
                 close(ICON);
-                &addrow_msg_log("Set screenshot as icon for $$gref{Name}");
-                &fill_list_guest();
+                addrow_msg_log("Set screenshot as icon for $$gref{Name}");
+                fill_list_guest();
             }
-            else { &addrow_msg_log("Warning: Could not save the icon for $$gref{Name}"); }
+            else { addrow_msg_log("Warning: Could not save the icon for $$gref{Name}"); }
         }
-        else { &show_err_msg('noscreenshot', 0); }
+        else { show_err_msg('noscreenshot', 0); }
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -1232,19 +1232,19 @@ sub screenshot_to_icon {
 sub group_list_expand {
     $gui{d}{Main}{treeviewGuest}->expand_all();
     $prefs{GUESTLISTEXPAND}=1;
-    &rbprefs_save();
+    rbprefs_save();
 }
 
 sub group_list_collapse {
     $gui{d}{Main}{treeviewGuest}->collapse_all();
     $prefs{GUESTLISTEXPAND}=0;
-    &rbprefs_save();
+    rbprefs_save();
 }
 
 # Shows the dialog for importing an appliance
 sub show_dialog_importappl {
-    my $vhost = &vhost();
-    $gui{d}{ImportAppl}{entryAppl}->set_text(&rcatfile($$vhost{machinedir}, 'appliance.ova'));
+    my $vhost = vhost();
+    $gui{d}{ImportAppl}{entryAppl}->set_text(rcatfile($$vhost{machinedir}, 'appliance.ova'));
 
     do {
         $gui{d}{ImportAppl}{dialog}->show_all();
@@ -1256,34 +1256,34 @@ sub show_dialog_importappl {
             push (@importopts, 'KeepAllMACs') if ($gui{d}{ImportAppl}{cboxMAC}->get_active() == 0);
             push (@importopts, 'KeepNATMACs') if ($gui{d}{ImportAppl}{cboxMAC}->get_active() == 1);
 
-            if (!$gui{d}{ImportAppl}{entryAppl}->get_text()) { &show_err_msg('invalidfile', 0); }
+            if (!$gui{d}{ImportAppl}{entryAppl}->get_text()) { show_err_msg('invalidfile', 0); }
             else {
                 $gui{d}{ImportAppl}{dialog}->hide();
                 my $appliancefile = $gui{d}{ImportAppl}{entryAppl}->get_text();
-                &addrow_msg_log("Importing appliance from $appliancefile");
+                addrow_msg_log("Importing appliance from $appliancefile");
                 my $IAppliance = IVirtualBox_createAppliance($gui{websn});
                 my $IProgress = IAppliance_read($IAppliance, $appliancefile);
 
                 if ($IProgress) {
-                    &show_progress_window($IProgress, 'Reading Appliance', $gui{pb}{ProgressReadAppl});
+                    show_progress_window($IProgress, 'Reading Appliance', $gui{pb}{ProgressReadAppl});
                     IAppliance_interpret($IAppliance);
                     my $warnings = IAppliance_getWarnings($IAppliance);
-                    &addrow_msg_log("Import warnings: $warnings") if ($warnings);
+                    addrow_msg_log("Import warnings: $warnings") if ($warnings);
                     $IProgress = IAppliance_importMachines($IAppliance, @importopts);
 
                     if ($IProgress) {
-                        &show_progress_window($IProgress, 'Importing Appliance', $gui{pb}{ProgressImport});
+                        show_progress_window($IProgress, 'Importing Appliance', $gui{pb}{ProgressImport});
                         my @appluuid = IAppliance_getMachines($IAppliance);
                         foreach my $id (@appluuid) {
-                            &makesel_list_guest($id); # Make the current selection the new appliance
-                            &addrow_msg_log("Imported new appliance from $appliancefile");
-                            &fill_list_guest(); # Repopulate the guest list so it appears and is selected
-                            &show_dialog_edit(); # Edit any settings
+                            makesel_list_guest($id); # Make the current selection the new appliance
+                            addrow_msg_log("Imported new appliance from $appliancefile");
+                            fill_list_guest(); # Repopulate the guest list so it appears and is selected
+                            show_dialog_edit(); # Edit any settings
                         }
                     }
-                    else { &show_err_msg('applimport', 0, "\nAppliance: $appliancefile"); }
+                    else { show_err_msg('applimport', 0, "\nAppliance: $appliancefile"); }
                 }
-                else { &show_err_msg('applimport', 0, "\nAppliance: $appliancefile"); }
+                else { show_err_msg('applimport', 0, "\nAppliance: $appliancefile"); }
             }
         }
         else { $gui{d}{ImportAppl}{dialog}->hide; }
@@ -1306,8 +1306,8 @@ sub show_dialog_decpasswd {
 
 # Displays the dialog for setting a guests group
 sub show_dialog_group {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} ne 'None') {
         my ($group) = IMachine_getGroups($$sref{IMachine}, ('/')); # Only interested in first group entry
@@ -1322,8 +1322,8 @@ sub show_dialog_group {
             $group = "/$group" if ($group !~ m/^\//);
             IMachine_setGroups($$sref{IMachine}, ($group));
             IMachine_saveSettings($$sref{IMachine});
-            &addrow_msg_log("Set group membership for $$gref{Name} to $group");
-            &fill_list_guest();
+            addrow_msg_log("Set group membership for $$gref{Name} to $group");
+            fill_list_guest();
         }
     }
 
@@ -1332,14 +1332,14 @@ sub show_dialog_group {
 
 # Clears the group for a VM
 sub clear_group {
-    my $gref = &getsel_list_guest();
-    my $sref = &get_session($$gref{IMachine});
+    my $gref = getsel_list_guest();
+    my $sref = get_session($$gref{IMachine});
 
     if ($$sref{Lock} ne 'None') {
         IMachine_setGroups($$sref{IMachine}, ('/'));
         IMachine_saveSettings($$sref{IMachine});
-        &addrow_msg_log("Ungrouped $$gref{Name}");
-        &fill_list_guest();
+        addrow_msg_log("Ungrouped $$gref{Name}");
+        fill_list_guest();
     }
 
     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
@@ -1348,7 +1348,7 @@ sub clear_group {
 # Update the server memory progress bar - also called from a timer
 sub update_server_membar {
     if ($gui{websn}) {
-        my $vhost = &vhost();
+        my $vhost = vhost();
         my $memavail = IHost_getMemoryAvailable($$vhost{IHost});
         my $memused = ($$vhost{memsize} - $memavail);
         $gui{d}{Main}{barMem}->set_text("Server Memory ($$vhost{memsize} MB): $memused MB Used / $memavail MB Free");
@@ -1361,7 +1361,7 @@ sub update_server_membar {
 # Display extended details when a guest is selected
 sub extended_details {
     $prefs{EXTENDEDDETAILS} = $gui{d}{Main}{checkbuttonDetails}->get_active();
-    &onsel_list_guest() if ($gui{d}{Main}{treeviewGuest}->get_selection->get_selected());
+    onsel_list_guest() if ($gui{d}{Main}{treeviewGuest}->get_selection->get_selected());
 }
 
 sub set_connection_prof_inactive {

@@ -4,8 +4,8 @@ use warnings;
 our (%gui, %signal, %vmc);
 
 sub init_edit_gen_basic {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my ($osfam, $osver) = &osfamver();
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my ($osfam, $osver) = osfamver();
     my $Name = IMachine_getName($vmc{IMachine});
     my $Osid = IMachine_getOSTypeId($vmc{IMachine});
     $gui{d}{Edit}{cboxGenFamily}->signal_handler_block($signal{Edit_cboxGenFamily_changed});
@@ -33,7 +33,7 @@ sub init_edit_gen_basic {
 
     $gui{d}{Edit}{cboxGenFamily}->signal_handler_unblock($signal{Edit_cboxGenFamily_changed});
     $gui{d}{Edit}{cboxGenVersion}->signal_handler_unblock($signal{Edit_cboxGenVersion_changed});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets the name of the guest
@@ -47,8 +47,8 @@ sub gen_basic_name {
 
 sub gen_basic_os_family {
     my ($combofam, $combover) = @_;
-    my ($osfam, $osver) = &osfamver();
-    my $fam = &getsel_combo($combofam, 1);
+    my ($osfam, $osver) = osfamver();
+    my $fam = getsel_combo($combofam, 1);
     $combofam->signal_handler_block($signal{Edit_cboxGenFamily_changed}); # Block to avoid signal emission when changing
     $combover->signal_handler_block($signal{Edit_cboxGenVersion_changed});
     $gui{d}{Edit}{lstoreGenVersion}->clear();
@@ -72,7 +72,7 @@ sub gen_basic_os_family {
 
 sub gen_basic_os_version {
     my ($combover) = @_;
-    my $ver = &getsel_combo($combover, 1);
+    my $ver = getsel_combo($combover, 1);
     IMachine_setOSTypeId($vmc{IMachine}, $ver);
 }
 

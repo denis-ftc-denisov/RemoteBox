@@ -10,7 +10,7 @@ our (%gui, $sharedir);
     my %vhost;
 
     sub vhost {
-        &init_vhost() if (!%vhost);
+        init_vhost() if (!%vhost);
         return \%vhost;
     }
 
@@ -74,16 +74,16 @@ our (%gui, $sharedir);
     my %osver;
 
     sub osfam {
-        &init_oslist() if (!%osfam);
+        init_oslist() if (!%osfam);
         return \%osfam;
     }
 
     sub osver {
-        &init_oslist() if (!%osver);
+        init_oslist() if (!%osver);
         return \%osver;
     }
 
-    sub osfamver { return &osfam(), &osver(); }
+    sub osfamver { return osfam(), osver(); }
 
     sub init_oslist {
         my @IGuestOSType = IVirtualBox_getGuestOSTypes($gui{websn});
@@ -190,7 +190,7 @@ sub get_icontroller_attrs {
     $$href{IStorageController} = $IStorageController; # For Convenience
     $$href{name} = IStorageController_getName($IStorageController) if ($$href{name});
     $$href{bus} = IStorageController_getBus($IStorageController) if ($$href{bus});
-    $$href{cache} = &bl(IStorageController_getUseHostIOCache($IStorageController)) if ($$href{cache});
+    $$href{cache} = bl(IStorageController_getUseHostIOCache($IStorageController)) if ($$href{cache});
 }
 
 # Resolution Table to standardize on sizes throughout RemoteBox
@@ -287,28 +287,28 @@ sub bl { $_[0] =~ /^[tT]/ ? 1 : 0 }
 
 # Converts a path to its canonical form
 sub rcanonpath {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     unless ($$vhost{os} =~ m/^WINDOWS/i) { return File::Spec::Unix->canonpath(@_); }
     else { return File::Spec::Win32->canonpath(@_); }
 }
 
 # Concatenates a file onto a path
 sub rcatfile {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     unless ($$vhost{os} =~ m/^WINDOWS/i) { return File::Spec::Unix->catfile(@_); }
     else { return File::Spec::Win32->catfile(@_); }
 }
 
 # Concatenates a dir onto a path
 sub rcatdir {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     unless ($$vhost{os} =~ m/^WINDOWS/i) { return File::Spec::Unix->catdir(@_); }
     else { return File::Spec::Win32->catdir(@_); }
 }
 
 # Splits a path into volume, dir, file
 sub rsplitpath {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     unless ($$vhost{os} =~ m/^WINDOWS/i) { return File::Spec::Unix->splitpath(@_); }
     else { return File::Spec::Win32->splitpath(@_); }
 }
@@ -408,7 +408,7 @@ sub ip4_highest {
     my ($ip4, $netmask) = @_;
     my $inverted_netmask = pack("N", ~unpack("N", inet_aton($netmask)));
     my $high_address = (inet_aton($ip4) | $inverted_netmask);
-    return &ip4_add(inet_ntoa($high_address), -1);
+    return ip4_add(inet_ntoa($high_address), -1);
 }
 
 # Inc / Dec an IP4 address by a certain amount

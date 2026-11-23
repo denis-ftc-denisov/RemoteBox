@@ -5,12 +5,12 @@ our (%gui, %signal, %vmc);
 
 # Initialise the audio page
 sub init_edit_audio {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my $vhost = &vhost();
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my $vhost = vhost();
     $gui{d}{Edit}{cboxAudioDriver}->signal_handler_block($signal{Edit_cboxAudioDriver_changed});
     $gui{d}{Edit}{cboxAudioController}->signal_handler_block($signal{Edit_cboxAudioController_changed});
     $gui{d}{Edit}{cboxAudioCodec}->signal_handler_block($signal{Edit_cboxAudioCodec_changed});
-    $gui{d}{Edit}{checkAudio}->set_active(&bl(IAudioAdapter_getEnabled($vmc{IAudioAdapter})));
+    $gui{d}{Edit}{checkAudio}->set_active(bl(IAudioAdapter_getEnabled($vmc{IAudioAdapter})));
 
     # Ghost / Unghost other widgets based on online editing and whether audio is enabled or not.
     if ($vmc{SessionType} eq 'WriteLock') {
@@ -21,8 +21,8 @@ sub init_edit_audio {
         $gui{d}{Edit}{gridAudioBottom}->set_sensitive($gui{d}{Edit}{checkAudio}->get_active());
     }
 
-    $gui{d}{Edit}{checkAudioInput}->set_active(&bl(IAudioAdapter_getEnabledIn($vmc{IAudioAdapter})));
-    $gui{d}{Edit}{checkAudioOutput}->set_active(&bl(IAudioAdapter_getEnabledOut($vmc{IAudioAdapter})));
+    $gui{d}{Edit}{checkAudioInput}->set_active(bl(IAudioAdapter_getEnabledIn($vmc{IAudioAdapter})));
+    $gui{d}{Edit}{checkAudioOutput}->set_active(bl(IAudioAdapter_getEnabledOut($vmc{IAudioAdapter})));
 
     # Set WinMM, MMPM and SolAudio to Null as they no longer seem supported and cause problems if set.
     my $AudioDriver = IAudioAdapter_getAudioDriver($vmc{IAudioAdapter});
@@ -37,13 +37,13 @@ sub init_edit_audio {
 
     my $controller =  IAudioAdapter_getAudioController($vmc{IAudioAdapter});
     $gui{d}{Edit}{cboxAudioCodec}->set_model($gui{'liststoreEditAudioCodec' . $controller});
-    &combobox_set_active_text($gui{d}{Edit}{cboxAudioCodec}, IAudioAdapter_getAudioCodec($vmc{IAudioAdapter}), 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxAudioDriver}, IAudioAdapter_getAudioDriver($vmc{IAudioAdapter}), 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxAudioController}, $controller, 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxAudioCodec}, IAudioAdapter_getAudioCodec($vmc{IAudioAdapter}), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxAudioDriver}, IAudioAdapter_getAudioDriver($vmc{IAudioAdapter}), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxAudioController}, $controller, 1);
     $gui{d}{Edit}{cboxAudioDriver}->signal_handler_unblock($signal{Edit_cboxAudioDriver_changed});
     $gui{d}{Edit}{cboxAudioController}->signal_handler_unblock($signal{Edit_cboxAudioController_changed});
     $gui{d}{Edit}{cboxAudioCodec}->signal_handler_unblock($signal{Edit_cboxAudioCodec_changed});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Toggle whether audio is enable or not for this guest
@@ -69,17 +69,17 @@ sub audio_output_toggle {
 # Set the audio controller type
 sub audio_ctr {
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $controller = &getsel_combo($gui{d}{Edit}{cboxAudioController}, 1);
+        my $controller = getsel_combo($gui{d}{Edit}{cboxAudioController}, 1);
         IAudioAdapter_setAudioController($vmc{IAudioAdapter}, $controller);
         $gui{d}{Edit}{cboxAudioCodec}->set_model($gui{'liststoreEditAudioCodec' . $controller});
-        &combobox_set_active_text($gui{d}{Edit}{cboxAudioCodec}, IAudioAdapter_getAudioCodec($vmc{IAudioAdapter}), 1);
+        combobox_set_active_text($gui{d}{Edit}{cboxAudioCodec}, IAudioAdapter_getAudioCodec($vmc{IAudioAdapter}), 1);
     }
 }
 
 # Set the audio codec
 sub audio_codec {
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $codec = &getsel_combo($gui{d}{Edit}{cboxAudioCodec}, 1);
+        my $codec = getsel_combo($gui{d}{Edit}{cboxAudioCodec}, 1);
         IAudioAdapter_setAudioCodec($vmc{IAudioAdapter}, $codec);
     }
 }
@@ -87,7 +87,7 @@ sub audio_codec {
 # Set the audio driver type
 sub audio_driver {
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $driver = &getsel_combo($gui{d}{Edit}{cboxAudioDriver}, 1);
+        my $driver = getsel_combo($gui{d}{Edit}{cboxAudioDriver}, 1);
         IAudioAdapter_setAudioDriver($vmc{IAudioAdapter}, $driver);
     }
 }

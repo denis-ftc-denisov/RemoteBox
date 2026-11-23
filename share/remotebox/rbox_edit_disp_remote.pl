@@ -4,22 +4,22 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_disp_remote {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    $gui{d}{Edit}{checkDispRemote}->set_active(&bl(IVRDEServer_getEnabled($vmc{IVRDEServer})));
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    $gui{d}{Edit}{checkDispRemote}->set_active(bl(IVRDEServer_getEnabled($vmc{IVRDEServer})));
     $gui{d}{Edit}{gridDispRemote}->set_sensitive($gui{d}{Edit}{checkDispRemote}->get_active()); # Ghost/Unghost other widgets based on server enabled
     $gui{d}{Edit}{sbDispRDPtimeout}->set_value(IVRDEServer_getAuthTimeout($vmc{IVRDEServer}));
     $gui{d}{Edit}{entryDispPort}->set_text(IVRDEServer_getVRDEProperty($vmc{IVRDEServer}, 'TCP/Ports'));
     $gui{d}{Edit}{entryDispBind}->set_text(IVRDEServer_getVRDEProperty($vmc{IVRDEServer}, 'TCP/Address'));
-    $gui{d}{Edit}{checkDispRDPmultiple}->set_active(&bl(IVRDEServer_getAllowMultiConnection($vmc{IVRDEServer})));
-    &combobox_set_active_text($gui{d}{Edit}{cboxDispRDPauth}, IVRDEServer_getAuthType($vmc{IVRDEServer}), 1);
+    $gui{d}{Edit}{checkDispRDPmultiple}->set_active(bl(IVRDEServer_getAllowMultiConnection($vmc{IVRDEServer})));
+    combobox_set_active_text($gui{d}{Edit}{cboxDispRDPauth}, IVRDEServer_getAuthType($vmc{IVRDEServer}), 1);
     # FIXME: Forced at the moment - should be configurable
     IVRDEServer_setVRDEProperty($vmc{IVRDEServer}, 'Security/Method', 'NEGOTIATE');
     IVRDEServer_setVRDEProperty($vmc{IVRDEServer}, 'Security/ServerCertificate', '');
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Set the RDP authentication type
-sub disp_rem_auth { IVRDEServer_setAuthType($vmc{IVRDEServer}, &getsel_combo($gui{d}{Edit}{cboxDispRDPauth}, 1)); }
+sub disp_rem_auth { IVRDEServer_setAuthType($vmc{IVRDEServer}, getsel_combo($gui{d}{Edit}{cboxDispRDPauth}, 1)); }
 
 # Set whether multiple RDP logins are allowed
 sub disp_rem_multi {
@@ -49,7 +49,7 @@ sub disp_rem_ports {
 
 # Addresses to bind to explicitylu
 sub disp_rem_bind {
-    my $address = &strim($gui{d}{Edit}{entryDispBind}->get_text());
+    my $address = strim($gui{d}{Edit}{entryDispBind}->get_text());
     IVRDEServer_setVRDEProperty($vmc{IVRDEServer}, 'TCP/Address', $address); # Null means delete
     return 0;
 }

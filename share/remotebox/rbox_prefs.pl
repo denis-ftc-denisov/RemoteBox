@@ -63,8 +63,8 @@ sub rbprefs_get {
             my ($pname, $url, $username, $password, $key) = split("\a", $_);
             my @pass = split(' ', $password);
             $password = pack("C*", @pass);
-            $password = &xor_pass($password, $key);
-            &addrow_profile(undef, $pname, $url, $username, $password);
+            $password = xor_pass($password, $key);
+            addrow_profile(undef, $pname, $url, $username, $password);
         }
     }
 }
@@ -104,8 +104,8 @@ sub rbprofiles_save {
                            $gui{d}{Connect}{lstoreProfile}->get_value($iter, 1) . "\a" .
                            $gui{d}{Connect}{lstoreProfile}->get_value($iter, 2) . "\a");
             my $password = $gui{d}{Connect}{lstoreProfile}->get_value($iter, 3);
-            my $key = &random_key(length($password));
-            $password = &xor_pass($password, $key);
+            my $key = random_key(length($password));
+            $password = xor_pass($password, $key);
             my @ordpass = unpack("C*", $password);
             $password = join(' ', @ordpass);
             print PROFILES "$password\a$key\n";
@@ -130,7 +130,7 @@ sub save_window_pos {
         $prefs{"WINPOS_windowMain"} = "$w:$h:$x:$y";
     }
 
-    &rbprefs_save();
+    rbprefs_save();
 }
 
 # Restore RemoteBox's window position to the last save position
@@ -153,14 +153,14 @@ sub restore_window_pos {
 }
 
 sub show_dialog_editnat {
-    my $natref = &getsel_list_vbprefsnat();
+    my $natref = getsel_list_vbprefsnat();
     $gui{d}{NAT}{entryName}->set_text($$natref{Name});
     $gui{d}{NAT}{entryCIDR}->set_text(INATNetwork_getNetwork($$natref{INATNetwork}));
-    $gui{d}{NAT}{checkDHCP}->set_active(&bl(INATNetwork_getNeedDhcpServer($$natref{INATNetwork})));
-     $gui{d}{NAT}{checkIPv6}->set_active(&bl(INATNetwork_getIPv6Enabled($$natref{INATNetwork})));
-    $gui{d}{NAT}{checkRoute}->set_active(&bl(INATNetwork_getAdvertiseDefaultIPv6RouteEnabled($$natref{INATNetwork})));
-    &fill_list_pf4($$natref{INATNetwork});
-    &fill_list_pf6($$natref{INATNetwork});
+    $gui{d}{NAT}{checkDHCP}->set_active(bl(INATNetwork_getNeedDhcpServer($$natref{INATNetwork})));
+     $gui{d}{NAT}{checkIPv6}->set_active(bl(INATNetwork_getIPv6Enabled($$natref{INATNetwork})));
+    $gui{d}{NAT}{checkRoute}->set_active(bl(INATNetwork_getAdvertiseDefaultIPv6RouteEnabled($$natref{INATNetwork})));
+    fill_list_pf4($$natref{INATNetwork});
+    fill_list_pf6($$natref{INATNetwork});
 
     do {
         $gui{d}{NAT}{dialog}->show_all;
@@ -168,8 +168,8 @@ sub show_dialog_editnat {
 
         if ($response eq 'ok') {
             # Other entries do not require validation
-            if (!$gui{d}{NAT}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
-            elsif (!&valid_cidr($gui{d}{NAT}{entryCIDR}->get_text())) { &show_err_msg('invalidipv4cidr', 0, '(Network CIDR)'); }
+            if (!$gui{d}{NAT}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
+            elsif (!valid_cidr($gui{d}{NAT}{entryCIDR}->get_text())) { show_err_msg('invalidipv4cidr', 0, '(Network CIDR)'); }
             else {
                 $gui{d}{NAT}{dialog}->hide;
                 INATNetwork_setNetworkName($$natref{INATNetwork}, $gui{d}{NAT}{entryName}->get_text());
@@ -177,7 +177,7 @@ sub show_dialog_editnat {
                 INATNetwork_setNeedDhcpServer($$natref{INATNetwork}, int($gui{d}{NAT}{checkDHCP}->get_active()));
                 INATNetwork_setIPv6Enabled($$natref{INATNetwork}, int( $gui{d}{NAT}{checkIPv6}->get_active()));
                 INATNetwork_setAdvertiseDefaultIPv6RouteEnabled($$natref{INATNetwork}, int($gui{d}{NAT}{checkRoute}->get_active()));
-                &fill_list_vbprefsnat();
+                fill_list_vbprefsnat();
             }
         }
         else { $gui{d}{NAT}{dialog}->hide; }
@@ -191,10 +191,10 @@ sub show_dialog_pf4 {
     my $oldname;
 
     if ($mode eq 'EDIT') {
-        my $rule = &getsel_list_pf4();
+        my $rule = getsel_list_pf4();
         $oldname = $$rule{Name};
         $gui{d}{PFRule4}{entryName}->set_text($$rule{Name});
-        &combobox_set_active_text($gui{d}{PFRule4}{cboxProtocol}, $$rule{Protocol}, 1);
+        combobox_set_active_text($gui{d}{PFRule4}{cboxProtocol}, $$rule{Protocol}, 1);
         $gui{d}{PFRule4}{entryHostIP}->set_text($$rule{HostIP});
         $gui{d}{PFRule4}{sbHostPort}->set_value($$rule{HostPort});
         $gui{d}{PFRule4}{entryGuestIP}->set_text($$rule{GuestIP});
@@ -208,22 +208,22 @@ sub show_dialog_pf4 {
 
         if ($response eq 'ok') {
             # No validation needed for other entries
-            if (!$gui{d}{PFRule4}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
-            elsif (!valid_ipv4($gui{d}{PFRule4}{entryHostIP}->get_text())) { &show_err_msg('invalidipv4address', 0, '(Host IP)'); }
-            elsif (!valid_ipv4($gui{d}{PFRule4}{entryGuestIP}->get_text())) { &show_err_msg('invalidipv4address', 0, '(Guest IP)'); }
+            if (!$gui{d}{PFRule4}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
+            elsif (!valid_ipv4($gui{d}{PFRule4}{entryHostIP}->get_text())) { show_err_msg('invalidipv4address', 0, '(Host IP)'); }
+            elsif (!valid_ipv4($gui{d}{PFRule4}{entryGuestIP}->get_text())) { show_err_msg('invalidipv4address', 0, '(Guest IP)'); }
             else {
                 $gui{d}{PFRule4}{dialog}->hide;
-                my $natref = &getsel_list_vbprefsnat();
+                my $natref = getsel_list_vbprefsnat();
                 # We can't actually edit an existing rule, so it's deleted and recreated.
                 INATNetwork_removePortForwardRule($$natref{INATNetwork}, 0, $oldname) if ($mode eq 'EDIT');
                 INATNetwork_addPortForwardRule($$natref{INATNetwork}, 0,
                                                $gui{d}{PFRule4}{entryName}->get_text(),
-                                               &getsel_combo($gui{d}{PFRule4}{cboxProtocol}, 1),
+                                               getsel_combo($gui{d}{PFRule4}{cboxProtocol}, 1),
                                                $gui{d}{PFRule4}{entryHostIP}->get_text(),
                                                int($gui{d}{PFRule4}{adjHostPort}->get_value()),
                                                $gui{d}{PFRule4}{entryGuestIP}->get_text(),
                                                int($gui{d}{PFRule4}{adjGuestPort}->get_value()));
-                &fill_list_pf4($$natref{INATNetwork});
+                fill_list_pf4($$natref{INATNetwork});
             }
         }
         else { $gui{d}{PFRule4}{dialog}->hide; }
@@ -237,10 +237,10 @@ sub show_dialog_pf6 {
     my $oldname;
 
     if ($mode eq 'EDIT') {
-        my $rule = &getsel_list_pf6();
+        my $rule = getsel_list_pf6();
         $oldname = $$rule{Name};
         $gui{d}{PFRule6}{entryName}->set_text($$rule{Name});
-        &combobox_set_active_text($gui{d}{PFRule6}{cboxProtocol}, $$rule{Protocol}, 1);
+        combobox_set_active_text($gui{d}{PFRule6}{cboxProtocol}, $$rule{Protocol}, 1);
         $gui{d}{PFRule6}{entryHostIP}->set_text($$rule{HostIP});
         $gui{d}{PFRule6}{sbHostPort}->set_value($$rule{HostPort});
         $gui{d}{PFRule6}{entryGuestIP}->set_text($$rule{GuestIP});
@@ -254,22 +254,22 @@ sub show_dialog_pf6 {
 
         if ($response eq 'ok') {
             # No validation needed for other entries
-            if (!$gui{d}{PFRule6}{entryName}->get_text()) { &show_err_msg('invalidname', 0, '(Portforwarding rule name)'); }
-            elsif (!valid_ipv6($gui{d}{PFRule6}{entryHostIP}->get_text())) { &show_err_msg('invalidipv6address', 0, '(Host IP)'); }
-            elsif (!valid_ipv6($gui{d}{PFRule6}{entryGuestIP}->get_text())) { &show_err_msg('invalidipv6address', 0, '(Guest IP)'); }
+            if (!$gui{d}{PFRule6}{entryName}->get_text()) { show_err_msg('invalidname', 0, '(Portforwarding rule name)'); }
+            elsif (!valid_ipv6($gui{d}{PFRule6}{entryHostIP}->get_text())) { show_err_msg('invalidipv6address', 0, '(Host IP)'); }
+            elsif (!valid_ipv6($gui{d}{PFRule6}{entryGuestIP}->get_text())) { show_err_msg('invalidipv6address', 0, '(Guest IP)'); }
             else {
                 $gui{d}{PFRule6}{dialog}->hide;
-                my $natref = &getsel_list_vbprefsnat();
+                my $natref = getsel_list_vbprefsnat();
                 # We can't actually edit an existing rule, so it's deleted and recreated.
                 INATNetwork_removePortForwardRule($$natref{INATNetwork}, 1, $oldname) if ($mode eq 'EDIT');
                 INATNetwork_addPortForwardRule($$natref{INATNetwork}, 1,
                                                $gui{d}{PFRule6}{entryName}->get_text(),
-                                               &getsel_combo($gui{d}{PFRule6}{cboxProtocol}, 1),
+                                               getsel_combo($gui{d}{PFRule6}{cboxProtocol}, 1),
                                                $gui{d}{PFRule6}{entryHostIP}->get_text(),
                                                int($gui{d}{PFRule6}{adjHostPort}->get_value()),
                                                $gui{d}{PFRule6}{entryGuestIP}->get_text(),
                                                int($gui{d}{PFRule6}{adjGuestPort}->get_value()));
-                &fill_list_pf6($$natref{INATNetwork});
+                fill_list_pf6($$natref{INATNetwork});
             }
         }
         else { $gui{d}{PFRule6}{dialog}->hide; }
@@ -279,16 +279,16 @@ sub show_dialog_pf6 {
 
 # Removes an IPv4 port forwarding rule to the selected NAT Network
 sub remove_pf_rule4 {
-    my $ruleref = &getsel_list_pf4();
+    my $ruleref = getsel_list_pf4();
     INATNetwork_removePortForwardRule($$ruleref{INATNetwork}, 0, $$ruleref{Name});
-    &fill_list_pf4($$ruleref{INATNetwork});
+    fill_list_pf4($$ruleref{INATNetwork});
 }
 
 # Removes an IPv6 port forwarding rule to the selected NAT Network
 sub remove_pf_rule6 {
-    my $ruleref = &getsel_list_pf6();
+    my $ruleref = getsel_list_pf6();
     INATNetwork_removePortForwardRule($$ruleref{INATNetwork}, 1, $$ruleref{Name});
-    &fill_list_pf6($$ruleref{INATNetwork});
+    fill_list_pf6($$ruleref{INATNetwork});
 }
 
 # Shows the RemoteBox preferences dialog
@@ -324,22 +324,22 @@ sub show_dialog_prefs {
         $prefs{AUTOSORTGUESTLIST} = int($gui{d}{Prefs}{checkSortGuest}->get_active());
         $prefs{NOEXTPACKWARNDIALOG} = int($gui{d}{Prefs}{checkNoExtPackWarn}->get_active());
         $prefs{NOVERSIONWARNDIALOG} = int($gui{d}{Prefs}{checkNoVersionWarn}->get_active());
-        $prefs{STOPTYPE} = &getsel_combo($gui{d}{Prefs}{cboxStop}, 1);
+        $prefs{STOPTYPE} = getsel_combo($gui{d}{Prefs}{cboxStop}, 1);
         $prefs{AUTOHINTDISP} = int($gui{d}{Prefs}{checkAutoHint}->get_active());
         $prefs{AUTOHINTDISPX} = int($gui{d}{Prefs}{sbWidth}->get_value());
         $prefs{AUTOHINTDISPY} = int($gui{d}{Prefs}{sbHeight}->get_value());
-        $prefs{AUTOHINTDISPD} = &getsel_combo($gui{d}{Prefs}{cboxDepth}, 1);
-        &rbprefs_save();
+        $prefs{AUTOHINTDISPD} = getsel_combo($gui{d}{Prefs}{cboxDepth}, 1);
+        rbprefs_save();
     }
 }
 
 # Shows the VirtualBox preferences dialog
 sub show_dialog_vbprefs {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     $gui{d}{VBPrefs}{entryMachineFolder}->set_text($$vhost{machinedir});
     $gui{d}{VBPrefs}{entryDatabaseFolder}->set_text($$vhost{autostartdb});
     $gui{d}{VBPrefs}{entryVRDPLib}->set_text($$vhost{vrdelib});
-    $gui{d}{VBPrefs}{checkExclusive}->set_active(&bl($$vhost{hwexclusive}));
+    $gui{d}{VBPrefs}{checkExclusive}->set_active(bl($$vhost{hwexclusive}));
     $gui{d}{VBPrefs}{dialog}->show_all();
     my $response = $gui{d}{VBPrefs}{dialog}->run();
     $gui{d}{VBPrefs}{dialog}->hide();
@@ -355,13 +355,13 @@ sub show_dialog_vbprefs {
         ISystemProperties_setAutostartDatabasePath($$vhost{ISystemProperties}, $autostartdir) if ($autostartdir ne $$vhost{autostartdb});
         if ($gui{d}{VBPrefs}{checkExclusive}->get_active()) { IPlatformProperties_setExclusiveHwVirt($$vhost{IPlatformProperties}, 'true'); }
         else { IPlatformProperties_setExclusiveHwVirt($$vhost{IPlatformProperties}, 'false'); }
-        &clr_vhost(); # VB Prefs changes can potentially alter vhost values, so clear them to be repopulated
+        clr_vhost(); # VB Prefs changes can potentially alter vhost values, so clear them to be repopulated
     }
 }
 
 # Shows the RDPVNCInfo dialog
 sub show_dialog_rdpvncinfo {
-    &fill_list_rdpvncinfo();
+    fill_list_rdpvncinfo();
     $gui{d}{RDPVNCInfo}{dialog}->show_all();
     $gui{d}{RDPVNCInfo}{dialog}->run();
     $gui{d}{RDPVNCInfo}{dialog}->hide();
@@ -369,8 +369,8 @@ sub show_dialog_rdpvncinfo {
 
 # Shows the Host Network Manager dialog
 sub show_dialog_hostnetman {
-    &fill_list_vbprefshon();
-    &fill_list_vbprefsnat();
+    fill_list_vbprefshon();
+    fill_list_vbprefsnat();
     $gui{d}{HostNetMan}{dialog}->show_all();
     $gui{d}{HostNetMan}{dialog}->run();
     $gui{d}{HostNetMan}{dialog}->hide();
@@ -381,11 +381,11 @@ sub show_dialog_profiles {
     $gui{d}{Profile}{dialog}->show_all();
     $gui{d}{Profile}{dialog}->run();
     $gui{d}{Profile}{dialog}->hide();
-    &rbprofiles_save();
+    rbprofiles_save();
 }
 
 sub show_dialog_edithon {
-    my $ifref = &getsel_list_vbprefshon();
+    my $ifref = getsel_list_vbprefshon();
     my @DHCPServers = IVirtualBox_getDHCPServers($gui{websn});
     my $IDHCPServer;
 
@@ -404,7 +404,7 @@ sub show_dialog_edithon {
     $gui{d}{HON}{entryIPV6Netmask}->set_text(IHostNetworkInterface_getIPV6NetworkMaskPrefixLength($$ifref{IHostNetworkInterface}));
     $gui{d}{HON}{gridDHCP}->set_sensitive($gui{d}{HON}{checkEnableDHCP}->get_active());
 
-    if (!$IDHCPServer or !&bl(IDHCPServer_getEnabled($IDHCPServer))) { $gui{d}{HON}{checkEnableDHCP}->set_active(0); }
+    if (!$IDHCPServer or !bl(IDHCPServer_getEnabled($IDHCPServer))) { $gui{d}{HON}{checkEnableDHCP}->set_active(0); }
     else { $gui{d}{HON}{checkEnableDHCP}->set_active(1); }
 
     do {
@@ -419,33 +419,33 @@ sub show_dialog_edithon {
 
             if (!valid_ipv4($gui{d}{HON}{entryIPV4Addr}->get_text())) {
                 $valid = FALSE;
-                &show_err_msg('invalidipv4address', 0, '(Adapter IPv4 Address)');
+                show_err_msg('invalidipv4address', 0, '(Adapter IPv4 Address)');
             }
             elsif (!valid_ipv4($gui{d}{HON}{entryIPV4Netmask}->get_text())) {
                 $valid = FALSE;
-                &show_err_msg('invalidipv4netmask', 0, '(Adapter IPv4 Netmask)');
+                show_err_msg('invalidipv4netmask', 0, '(Adapter IPv4 Netmask)');
             }
             elsif ($ipv6addr and !valid_ipv6($ipv6addr)) {
                 $valid = FALSE;
-                &show_err_msg('invalidipv6address', 0, '(Adapter IPv6 Address)');
+                show_err_msg('invalidipv6address', 0, '(Adapter IPv6 Address)');
             }
 
             if ($active) {
                 if (!valid_ipv4($gui{d}{HON}{entryServerAddr}->get_text())) {
                     $valid = FALSE;
-                    &show_err_msg('invalidipv4address', 0, '(DHCP Server Address)');
+                    show_err_msg('invalidipv4address', 0, '(DHCP Server Address)');
                 }
                 elsif (!valid_ipv4($gui{d}{HON}{entryServerNetmask}->get_text())) {
                     $valid = FALSE;
-                    &show_err_msg('invalidipv4netmask', 0, '(DHCP Server Netmask)');
+                    show_err_msg('invalidipv4netmask', 0, '(DHCP Server Netmask)');
                 }
                 elsif (!valid_ipv4($gui{d}{HON}{entryLowerBound}->get_text())) {
                     $valid = FALSE;
-                    &show_err_msg('invalidipv4address', 0, '(DHCP Server Lower Address Bound)');
+                    show_err_msg('invalidipv4address', 0, '(DHCP Server Lower Address Bound)');
                 }
                 elsif (!valid_ipv4($gui{d}{HON}{entryUpperBound}->get_text())) {
                     $valid = FALSE;
-                    &show_err_msg('invalidipv4address', 0, '(DHCP Server Upper Address Bound)');
+                    show_err_msg('invalidipv4address', 0, '(DHCP Server Upper Address Bound)');
                 }
             }
 
@@ -465,7 +465,7 @@ sub show_dialog_edithon {
 
                 IHostNetworkInterface_enableStaticIPConfig($$ifref{IHostNetworkInterface}, $gui{d}{HON}{entryIPV4Addr}->get_text() , $gui{d}{HON}{entryIPV4Netmask}->get_text());
                 IHostNetworkInterface_enableStaticIPConfigV6($$ifref{IHostNetworkInterface}, $ipv6addr, $gui{d}{HON}{entryIPV6Netmask}->get_text()) if ($ipv6addr);
-                &fill_list_vbprefshon();
+                fill_list_vbprefshon();
             }
         }
         else { $gui{d}{HON}{dialog}->hide(); }
@@ -490,17 +490,17 @@ sub vbprefs_reset {
 sub vbprefs_createhon {
     my $IHost = IVirtualBox_getHost($gui{websn});
     my ($hostinterface, $IProgress) = IHost_createHostOnlyNetworkInterface($IHost);
-    &show_progress_window($IProgress, 'Adding host only network', $gui{pb}{ProgressNetwork});
-    &fill_list_vbprefshon();
+    show_progress_window($IProgress, 'Adding host only network', $gui{pb}{ProgressNetwork});
+    fill_list_vbprefshon();
 }
 
 sub vbprefs_createnat {
     IVirtualBox_createNATNetwork($gui{websn}, 'NatNetwork ' . int(rand(999999)));
-    &fill_list_vbprefsnat();
+    fill_list_vbprefsnat();
 }
 
 sub vbprefs_removehon {
-    my $ifref = &getsel_list_vbprefshon();
+    my $ifref = getsel_list_vbprefshon();
     my @DHCPServers = IVirtualBox_getDHCPServers($gui{websn});
 
     # Check if it has a DCHP server associated with it
@@ -513,14 +513,14 @@ sub vbprefs_removehon {
 
     my $IHost = IVirtualBox_getHost($gui{websn});
     my $IProgress = IHost_removeHostOnlyNetworkInterface($IHost, $$ifref{Uuid});
-    &show_progress_window($IProgress, 'Removing host only network', $gui{pb}{ProgressNetwork});
-    &fill_list_vbprefshon();
+    show_progress_window($IProgress, 'Removing host only network', $gui{pb}{ProgressNetwork});
+    fill_list_vbprefshon();
 }
 
 sub vbprefs_removenat {
-    my $natref = &getsel_list_vbprefsnat();
+    my $natref = getsel_list_vbprefsnat();
     IVirtualBox_removeNATNetwork($gui{websn}, $$natref{INATNetwork});
-    &fill_list_vbprefsnat();
+    fill_list_vbprefsnat();
 }
 
 # Can't use getsel_list_vbprefsnat in here due to the way the signals are propagated
@@ -530,14 +530,14 @@ sub vbprefs_togglenat {
     my $val = $gui{d}{HostNetMan}{lstoreNAT}->get($iter, 0);
     my $INATNetwork = $gui{d}{HostNetMan}{lstoreNAT}->get($iter, 2);
     INATNetwork_setEnabled($INATNetwork, !$val);
-    &fill_list_vbprefsnat();
+    fill_list_vbprefsnat();
 }
 
 sub rbprefs_sslverify {
     my $active = $gui{d}{Connect}{checkSSL}->get_active();
     $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = $active;
     $prefs{SSLVERIFY} = $active;
-    &rbprefs_save();
+    rbprefs_save();
 }
 
 sub vbprefs_hon_dhcp_toggle {
@@ -551,9 +551,9 @@ sub vbprefs_hon_dhcp_toggle {
             my $ip4 = $gui{d}{HON}{entryIPV4Addr}->get_text();
             my $nm = $gui{d}{HON}{entryIPV4Netmask}->get_text();
             $gui{d}{HON}{entryServerNetmask}->set_text($nm);
-            $gui{d}{HON}{entryServerAddr}->set_text(&ip4_add($ip4, 1));
-            $gui{d}{HON}{entryLowerBound}->set_text(&ip4_add($ip4, 2));
-            $gui{d}{HON}{entryUpperBound}->set_text(&ip4_highest($ip4, $nm));
+            $gui{d}{HON}{entryServerAddr}->set_text(ip4_add($ip4, 1));
+            $gui{d}{HON}{entryLowerBound}->set_text(ip4_add($ip4, 2));
+            $gui{d}{HON}{entryUpperBound}->set_text(ip4_highest($ip4, $nm));
         }
         else {
             # There's an existing DHCP server.

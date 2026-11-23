@@ -5,8 +5,8 @@ our (%gui, %vmc);
 
 # Initialise the display page
 sub init_edit_disp_screen() {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my $vhost = &vhost();
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my $vhost = vhost();
 
     if (IGraphicsAdapter_getGraphicsControllerType($vmc{IGraphicsAdapter}) eq 'Null') { $gui{d}{Edit}{cboxDispController}->set_active(0); }
     elsif (IGraphicsAdapter_getGraphicsControllerType($vmc{IGraphicsAdapter}) eq 'VBoxVGA') { $gui{d}{Edit}{cboxDispController}->set_active(1); }
@@ -17,15 +17,15 @@ sub init_edit_disp_screen() {
     $gui{d}{Edit}{sbDispMemory}->set_value(IGraphicsAdapter_getVRAMSize($vmc{IGraphicsAdapter}));
     $gui{d}{Edit}{sbDispMonitor}->set_range($$vhost{minmonitors}, $$vhost{maxmonitors});
     $gui{d}{Edit}{sbDispMonitor}->set_value(IGraphicsAdapter_getMonitorCount($vmc{IGraphicsAdapter}));
-    $gui{d}{Edit}{checkDisp3D}->set_active(&bl(IGraphicsAdapter_isFeatureEnabled($vmc{IGraphicsAdapter}, 'Acceleration3D')));
-    &set_pointer($gui{d}{Edit}{dialog});
+    $gui{d}{Edit}{checkDisp3D}->set_active(bl(IGraphicsAdapter_isFeatureEnabled($vmc{IGraphicsAdapter}, 'Acceleration3D')));
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Set whether 3D accelerator is enabled.
 sub disp_scr_3D { IGraphicsAdapter_setFeature($vmc{IGraphicsAdapter}, 'Acceleration3D', $gui{d}{Edit}{checkDisp3D}->get_active()); }
 
 # Set the virtual VGA card type
-sub disp_scr_VGA { if ($vmc{SessionType} eq 'WriteLock') { IGraphicsAdapter_setGraphicsControllerType($vmc{IGraphicsAdapter}, &getsel_combo($gui{d}{Edit}{cboxDispController}, 1)); } }
+sub disp_scr_VGA { if ($vmc{SessionType} eq 'WriteLock') { IGraphicsAdapter_setGraphicsControllerType($vmc{IGraphicsAdapter}, getsel_combo($gui{d}{Edit}{cboxDispController}, 1)); } }
 
 # Set the amount of video memory
 sub disp_scr_vid_mem {

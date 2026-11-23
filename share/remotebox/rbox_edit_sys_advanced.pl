@@ -4,12 +4,12 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_sys_adv {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     $gui{d}{Edit}{sbSysTime}->set_value(IFirmwareSettings_getTimeOffset($vmc{IFirmwareSettings}));
-    $gui{d}{Edit}{checkSysLargepages}->set_active(&bl(IPlatformX86_getHWVirtExProperty($vmc{IPlatformX86}, 'LargePages')));
-    $gui{d}{Edit}{checkSysHPET}->set_active(&bl(IPlatformX86_getHPETEnabled($vmc{IPlatformX86})));
-    $gui{d}{Edit}{checkSysFusion}->set_active(&bl(IMachine_getPageFusionEnabled($vmc{IMachine})));
-    &set_pointer($gui{d}{Edit}{dialog});
+    $gui{d}{Edit}{checkSysLargepages}->set_active(bl(IPlatformX86_getHWVirtExProperty($vmc{IPlatformX86}, 'LargePages')));
+    $gui{d}{Edit}{checkSysHPET}->set_active(bl(IPlatformX86_getHPETEnabled($vmc{IPlatformX86})));
+    $gui{d}{Edit}{checkSysFusion}->set_active(bl(IMachine_getPageFusionEnabled($vmc{IMachine})));
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets whether the guest will be involved in 'memory dedupe'

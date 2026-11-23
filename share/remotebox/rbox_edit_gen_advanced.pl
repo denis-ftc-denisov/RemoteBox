@@ -4,16 +4,16 @@ use warnings;
 our (%gui, %signal, %vmc);
 
 sub init_edit_gen_advanced {
-    &set_pointer($gui{d}{Edit}{dialog});
-    my $vhost = &vhost();
-    &combobox_set_active_text($gui{d}{Edit}{cboxGenClip}, IMachine_getClipboardMode($vmc{IMachine}), 1);
+    set_pointer($gui{d}{Edit}{dialog});
+    my $vhost = vhost();
+    combobox_set_active_text($gui{d}{Edit}{cboxGenClip}, IMachine_getClipboardMode($vmc{IMachine}), 1);
 
     if ($$vhost{autostartdb}) {
         $gui{d}{Edit}{cboxGenAutostop}->set_sensitive(1);
         $gui{d}{Edit}{checkGenAutostart}->set_sensitive(1);
         $gui{d}{Edit}{sbGenAutostart}->set_sensitive(1);
-        &combobox_set_active_text($gui{d}{Edit}{cboxGenAutostop}, IMachine_getAutostopType($vmc{IMachine}), 1);
-        $gui{d}{Edit}{checkGenAutostart}->set_active(&bl(IMachine_getAutostartEnabled($vmc{IMachine})));
+        combobox_set_active_text($gui{d}{Edit}{cboxGenAutostop}, IMachine_getAutostopType($vmc{IMachine}), 1);
+        $gui{d}{Edit}{checkGenAutostart}->set_active(bl(IMachine_getAutostartEnabled($vmc{IMachine})));
         $gui{d}{Edit}{sbGenAutostart}->set_value(IMachine_getAutostartDelay($vmc{IMachine}));
     }
     else {
@@ -27,7 +27,7 @@ sub init_edit_gen_advanced {
     $gui{d}{Edit}{entryGenSnapfolder}->set_text(IMachine_getSnapshotFolder($vmc{IMachine}));
     $gui{d}{Edit}{entryGenSnapfolder}->signal_handler_unblock($signal{Edit_entryGenSnapfolder_activate});
     $gui{d}{Edit}{entryGenSnapfolder}->signal_handler_block($signal{Edit_entryGenSnapfolder_focus});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets the name of the snapshot folder
@@ -40,7 +40,7 @@ sub gen_snapfolder {
 
 # Sets the clipboard sharing mode
 sub gen_adv_clipboard {
-    IMachine_setClipboardMode($vmc{IMachine}, &getsel_combo($gui{d}{Edit}{cboxGenClip}, 1));
+    IMachine_setClipboardMode($vmc{IMachine}, getsel_combo($gui{d}{Edit}{cboxGenClip}, 1));
     return 0;
 }
 
@@ -49,7 +49,7 @@ sub gen_adv_autostart { IMachine_setAutostartEnabled($vmc{IMachine}, $gui{d}{Edi
 
 # Set the guest's autostop type
 sub gen_adv_autostop_mode {
-    IMachine_setAutostopType($vmc{IMachine}, &getsel_combo($gui{d}{Edit}{cboxGenAutostop}, 1));
+    IMachine_setAutostopType($vmc{IMachine}, getsel_combo($gui{d}{Edit}{cboxGenAutostop}, 1));
     return 0;
 }
 

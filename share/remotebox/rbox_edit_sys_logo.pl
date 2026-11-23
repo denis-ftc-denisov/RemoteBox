@@ -4,12 +4,12 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_sys_logo {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     $gui{d}{Edit}{entrySysLogo}->set_text(IFirmwareSettings_getLogoImagePath($vmc{IFirmwareSettings}));
     $gui{d}{Edit}{sbSysLogotime}->set_value(IFirmwareSettings_getLogoDisplayTime($vmc{IFirmwareSettings}));
-    $gui{d}{Edit}{checkSysFadein}->set_active(&bl(IFirmwareSettings_getLogoFadeIn($vmc{IFirmwareSettings})));
-    $gui{d}{Edit}{checkSysFadeout}->set_active(&bl(IFirmwareSettings_getLogoFadeOut($vmc{IFirmwareSettings})));
-    &set_pointer($gui{d}{Edit}{dialog});
+    $gui{d}{Edit}{checkSysFadein}->set_active(bl(IFirmwareSettings_getLogoFadeIn($vmc{IFirmwareSettings})));
+    $gui{d}{Edit}{checkSysFadeout}->set_active(bl(IFirmwareSettings_getLogoFadeOut($vmc{IFirmwareSettings})));
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets an alternative BIOS boot screen (BMP)

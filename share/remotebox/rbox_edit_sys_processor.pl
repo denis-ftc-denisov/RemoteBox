@@ -4,15 +4,15 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_sys_proc {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my $vhost = &vhost();
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my $vhost = vhost();
     $gui{d}{Edit}{scaleSysProcessor}->set_range($$vhost{minguestcpu}, $$vhost{maxhostcpuon} + 1); # +1 works around GTK bug
     $gui{d}{Edit}{scaleSysProcessor}->set_value(IMachine_getCPUCount($vmc{IMachine}));
     $gui{d}{Edit}{scaleSysCap}->set_value(IMachine_getCPUExecutionCap($vmc{IMachine}));
-    $gui{d}{Edit}{checkSysPAE}->set_active(&bl(IPlatformX86_getCPUProperty($vmc{IPlatformX86}, 'PAE')));
-    $gui{d}{Edit}{checkSysVTX}->set_active(&bl(IPlatformX86_getCPUProperty($vmc{IPlatformX86}, 'HWVirt')));
-    $gui{d}{Edit}{checkSysHot}->set_active(&bl(IMachine_getCPUHotPlugEnabled($vmc{IMachine})));
-    &set_pointer($gui{d}{Edit}{dialog});
+    $gui{d}{Edit}{checkSysPAE}->set_active(bl(IPlatformX86_getCPUProperty($vmc{IPlatformX86}, 'PAE')));
+    $gui{d}{Edit}{checkSysVTX}->set_active(bl(IPlatformX86_getCPUProperty($vmc{IPlatformX86}, 'HWVirt')));
+    $gui{d}{Edit}{checkSysHot}->set_active(bl(IMachine_getCPUHotPlugEnabled($vmc{IMachine})));
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Toggle the processor hotplug flag
@@ -27,7 +27,7 @@ sub sys_proc_hotplug {
             my $cpucount = IMachine_getCPUCount($vmc{IMachine});
 
             foreach my $num (1..($cpucount-1)) {
-                IMachine_hotUnplugCPU($vmc{IMachine}, $num) if (&bl(IMachine_getCPUStatus($vmc{IMachine}, $num)));
+                IMachine_hotUnplugCPU($vmc{IMachine}, $num) if (bl(IMachine_getCPUStatus($vmc{IMachine}, $num)));
             }
             IMachine_setCPUCount($vmc{IMachine}, 1);
             IMachine_setCPUHotPlugEnabled($vmc{IMachine}, 0);
@@ -42,12 +42,12 @@ sub sys_proc_count {
         my $newcpucount = int($gui{d}{Edit}{adjSysProcessor} ->get_value());
 
         # In hot-plug mode, if we reduce the number of CPUs, we must offline them first.
-        if (&bl(IMachine_getCPUHotPlugEnabled($vmc{IMachine}))) {
+        if (bl(IMachine_getCPUHotPlugEnabled($vmc{IMachine}))) {
             my $curcpucount = IMachine_getCPUCount($vmc{IMachine});
 
             if ($newcpucount < $curcpucount) {
                 foreach my $num ($newcpucount..($curcpucount-1)) {
-                    IMachine_hotUnplugCPU($vmc{IMachine}, $num) if (&bl(IMachine_getCPUStatus($vmc{IMachine}, $num)));
+                    IMachine_hotUnplugCPU($vmc{IMachine}, $num) if (bl(IMachine_getCPUStatus($vmc{IMachine}, $num)));
                 }
             }
         }

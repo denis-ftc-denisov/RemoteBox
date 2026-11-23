@@ -4,9 +4,9 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_gen_description {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     $gui{d}{Edit}{tbGenDescription}->set_text(IMachine_getDescription($vmc{IMachine}));
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets the guest's description

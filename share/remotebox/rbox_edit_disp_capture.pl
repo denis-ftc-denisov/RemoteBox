@@ -10,7 +10,7 @@ our (%gui, %vmc);
 my %cap_opts;
 
 sub init_edit_disp_capture {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     my $cap_optstr = IRecordingScreenSettings_getOptions($vmc{IRecordingScreenSettings});
     undef(%cap_opts); # We must clear the hash each time as old options from a pervious edit might get left
 
@@ -30,14 +30,14 @@ sub init_edit_disp_capture {
     $gui{d}{Edit}{gridDispRecording}->set_sensitive($gui{d}{Edit}{checkDispRecording}->get_active()) if ($vmc{SessionType} eq 'WriteLock'); # Ghost/Unghost other widgets based on capture enabled
     $gui{d}{Edit}{sbDispRecordingrate}->set_value(IRecordingScreenSettings_getVideoFPS($vmc{IRecordingScreenSettings}));
     $gui{d}{Edit}{sbDispRecordingVidqual}->set_value(IRecordingScreenSettings_getVideoRate($vmc{IRecordingScreenSettings}));
-    $gui{d}{Edit}{checkDispRecording}->set_active(&bl(IRecordingSettings_getEnabled($vmc{IRecordingSettings}))); # We only support screen 0, this is the master switch. We also toggle the switch for screen 0
+    $gui{d}{Edit}{checkDispRecording}->set_active(bl(IRecordingSettings_getEnabled($vmc{IRecordingSettings}))); # We only support screen 0, this is the master switch. We also toggle the switch for screen 0
     $gui{d}{Edit}{entryDispRecordingpath}->set_text(IRecordingScreenSettings_getFilename($vmc{IRecordingScreenSettings}));
 
     if ($cap_opts{ac_enabled} eq 'false' and $cap_opts{vc_enabled} eq 'true') { $gui{d}{Edit}{cboxDispRecordingmode}->set_active(2); }
     elsif ($cap_opts{ac_enabled} eq 'true' and $cap_opts{vc_enabled} eq 'false') { $gui{d}{Edit}{cboxDispRecordingmode}->set_active(1); }
     else  { $gui{d}{Edit}{cboxDispRecordingmode}->set_active(0); }
 
-    &combobox_set_active_text($gui{d}{Edit}{cboxDispAudqual}, $cap_opts{ac_profile}, 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxDispAudqual}, $cap_opts{ac_profile}, 1);
     my ($w, $h) = (IRecordingScreenSettings_getVideoWidth($vmc{IRecordingScreenSettings}), IRecordingScreenSettings_getVideoHeight($vmc{IRecordingScreenSettings}));
     my $fsiter = $gui{d}{Edit}{lstoreDispRecordingsize}->get_iter_first(); # Set the framesize combobox to the active position depending on associated spinboxes
     my $fspos = 0;
@@ -55,7 +55,7 @@ sub init_edit_disp_capture {
             $gui{d}{Edit}{sbDispRecordingh}->set_value($h);
         }
     }
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Save the preferred capture width
@@ -89,8 +89,8 @@ sub disp_cap_vidrate {
 # Sets the quality of the audio
 sub disp_cap_audio_quality {
     my ($widget) = @_;
-    $cap_opts{ac_profile} = &getsel_combo($widget, 1);
-    &disp_cap_send_opts();
+    $cap_opts{ac_profile} = getsel_combo($widget, 1);
+    disp_cap_send_opts();
 }
 
 # The the location of the video/audio capture file
@@ -111,7 +111,7 @@ sub disp_toggleCapture {
 # If the combobox changes, update the associated spinboxes
 sub disp_cap_size {
     my ($widget) = @_;
-    my ($w, $h) = (&getsel_combo($widget,1), &getsel_combo($widget,2));
+    my ($w, $h) = (getsel_combo($widget,1), getsel_combo($widget,2));
     unless ($w < 17 and $h < 17) { # Min width/height is 16
         $gui{d}{Edit}{sbDispRecordingw}->set_value($w);
         $gui{d}{Edit}{sbDispRecordingh}->set_value($h);
@@ -121,7 +121,7 @@ sub disp_cap_size {
 # Sets the recording mode. (ie Video+Audio, Video Only, Audo Only)
 sub disp_cap_mode {
     my ($widget) = @_;
-    my $mode = &getsel_combo($widget, 1);
+    my $mode = getsel_combo($widget, 1);
 
     if ($mode eq 'video') {
         $cap_opts{vc_enabled}='true';
@@ -136,7 +136,7 @@ sub disp_cap_mode {
         $cap_opts{ac_enabled}='true';
     }
 
-    &disp_cap_send_opts();
+    disp_cap_send_opts();
 }
 
 # Send the display capture options

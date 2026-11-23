@@ -9,7 +9,7 @@ sub init_edit_usb {
     # O=1 E=0 X=0 : USB Enabled. Version 1.1
     # O=1 E=1 X=0 : USB Enabled. Version 2.0
     # O=0 E=0 X=1 : USB Enabled. Version 3.0
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     my @IUSBController = IMachine_getUSBControllers($vmc{IMachine});
     $gui{d}{Edit}{checkUSB}->signal_handler_block($signal{Edit_buttonUSBEnable_toggled});
     my $usbstate = 0;
@@ -20,15 +20,15 @@ sub init_edit_usb {
         elsif (IUSBController_getType($usbcontroller) eq 'XHCI') { $usbstate = 3; }
     }
 
-    &usb_sens_enabled($usbstate); # OHCI state also acts as a toggle for enabling/disabling USB
+    usb_sens_enabled($usbstate); # OHCI state also acts as a toggle for enabling/disabling USB
 
     my @IHostUSBDevices = IHost_getUSBDevices($vmc{IHost});
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
     $gui{menu}{USB} = Gtk3::Menu->new();
     $gui{d}{Edit}{buttonUSBAdd}->signal_connect('button-release-event' => sub { $gui{menu}{USB}->popup(undef, undef, undef, undef, 0, $_[1]->time) if ($_[1]->button == 1); });
 
     foreach my $usb (@IHostUSBDevices) {
-        my $label = &usb_make_label(IUSBDevice_getManufacturer($usb),
+        my $label = usb_make_label(IUSBDevice_getManufacturer($usb),
                                     IUSBDevice_getProduct($usb),
                                     sprintf('%04x', IUSBDevice_getRevision($usb)));
 
@@ -40,7 +40,7 @@ sub init_edit_usb {
     }
 
     $gui{d}{Edit}{checkUSB}->signal_handler_unblock($signal{Edit_buttonUSBEnable_toggled});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Shows the dialog for adding or editing a USB filter
@@ -54,7 +54,7 @@ sub show_dialog_usbfilter {
     $gui{d}{USBFilter}{entryProduct}->set_text(IUSBDeviceFilter_getProduct($$filref{IUSBDeviceFilter}));
     $gui{d}{USBFilter}{entrySerial}->set_text(IUSBDeviceFilter_getSerialNumber($$filref{IUSBDeviceFilter}));
     $gui{d}{USBFilter}{entryPort}->set_text(IUSBDeviceFilter_getPort($$filref{IUSBDeviceFilter}));
-    &combobox_set_active_text($gui{d}{USBFilter}{cboxRemote}, IUSBDeviceFilter_getRemote($$filref{IUSBDeviceFilter}), 1);
+    combobox_set_active_text($gui{d}{USBFilter}{cboxRemote}, IUSBDeviceFilter_getRemote($$filref{IUSBDeviceFilter}), 1);
 
     do {
         $gui{d}{USBFilter}{dialog}->show_all;
@@ -62,7 +62,7 @@ sub show_dialog_usbfilter {
 
         if ($response eq 'ok') {
             # Other entries do not require validation
-            if (!$gui{d}{USBFilter}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
+            if (!$gui{d}{USBFilter}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
             else {
                 $gui{d}{USBFilter}{dialog}->hide;
                 IUSBDeviceFilters_removeDeviceFilter($vmc{USBFilters}, $$filref{Position}); # Remove the original filter
@@ -82,10 +82,10 @@ sub show_dialog_usbfilter {
                 # '' = Any (but in the liststore it has to be 'any'
                 # 'yes' = Yes
                 # 'no'  = No
-                my $remote = &getsel_combo($gui{d}{USBFilter}{cboxRemote}, 1);
+                my $remote = getsel_combo($gui{d}{USBFilter}{cboxRemote}, 1);
                 $remote =~ s/any//g;
                 IUSBDeviceFilter_setRemote($newfilter, $remote);
-                &fill_list_usbfilters($vmc{IMachine});
+                fill_list_usbfilters($vmc{IMachine});
             }
         }
         else { $gui{d}{USBFilter}{dialog}->hide; }
@@ -106,7 +106,7 @@ sub usb_toggle {
         }
     }
 
-    &usb_sens_enabled($state);
+    usb_sens_enabled($state);
 }
 
 # Handles setting the controller type. The sub is somewhat unusual because of the
@@ -134,7 +134,7 @@ sub usb_ctr_type {
 
 # Adds and empty USB filter for the user to fill in manually
 sub usb_add_zero_filter {
-    my $filref = &getsel_list_usbfilters();
+    my $filref = getsel_list_usbfilters();
     my $pos = 0;
 
     # Determine position for new filter, based on whether one is selected or not
@@ -142,12 +142,12 @@ sub usb_add_zero_filter {
     my $IUSBDeviceFilter = IUSBDeviceFilters_createDeviceFilter($vmc{USBFilters}, 'New Filter ' . int(rand(999999)));
     IUSBDeviceFilter_setActive($IUSBDeviceFilter, 1);
     IUSBDeviceFilters_insertDeviceFilter($vmc{USBFilters}, $pos, $IUSBDeviceFilter);
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
 }
 
 sub usb_add_filter {
     my ($widget, $usbid) = @_;
-    my $filref = &getsel_list_usbfilters();
+    my $filref = getsel_list_usbfilters();
     my $pos = 0;
     # Determine position for new filter, based on whether one is selected or not
     $pos = $$filref{Position} + 1 if ($$filref{Position});
@@ -159,7 +159,7 @@ sub usb_add_filter {
                      product      => IUSBDevice_getProduct($IHostUSBDevice),
                      serial       => IUSBDevice_getSerialNumber($IHostUSBDevice));
 
-    my $label = &usb_make_label($usbdevice{manufacturer}, $usbdevice{product}, $usbdevice{revision});
+    my $label = usb_make_label($usbdevice{manufacturer}, $usbdevice{product}, $usbdevice{revision});
     my $IUSBDeviceFilter = IUSBDeviceFilters_createDeviceFilter($vmc{USBFilters}, $label);
     IUSBDeviceFilter_setActive($IUSBDeviceFilter, 1);
     IUSBDeviceFilter_setVendorId($IUSBDeviceFilter, $usbdevice{vendorId});
@@ -169,7 +169,7 @@ sub usb_add_filter {
     IUSBDeviceFilter_setProduct($IUSBDeviceFilter, $usbdevice{product});
     IUSBDeviceFilter_setSerialNumber($IUSBDeviceFilter, $usbdevice{serial});
     IUSBDeviceFilters_insertDeviceFilter($vmc{USBFilters}, $pos, $IUSBDeviceFilter);
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
     return 0;
 }
 
@@ -184,22 +184,22 @@ sub usb_make_label {
 }
 
 sub usb_remove_filter {
-    my $filref = &getsel_list_usbfilters();
+    my $filref = getsel_list_usbfilters();
     IUSBDeviceFilters_removeDeviceFilter($vmc{USBFilters}, $$filref{Position});
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
 }
 
 sub usb_move_filter {
     my ($widget) = @_;
     my $pos = 0;
-    my $filref = &getsel_list_usbfilters();
+    my $filref = getsel_list_usbfilters();
 
     if ($widget eq $gui{d}{Edit}{buttonUSBUp} and $$filref{Position} > 0) { $pos = -1; }
     elsif ($widget eq $gui{d}{Edit}{buttonUSBDown}) { $pos = 1; }
 
     my $IUSBDeviceFilter = IUSBDeviceFilters_removeDeviceFilter($vmc{USBFilters}, $$filref{Position});
     IUSBDeviceFilters_insertDeviceFilter($vmc{USBFilters}, $$filref{Position} + $pos, $IUSBDeviceFilter);
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
 }
 
 # Can't use getsel_list_usbfilters in here due to the way the signals are propagated
@@ -209,7 +209,7 @@ sub usb_toggle_filter {
     my $val = $gui{d}{Edit}{lstoreUSB}->get($iter, 0);
     my $IUSBDeviceFilter = $gui{d}{Edit}{lstoreUSB}->get($iter, 1);
     IUSBDeviceFilter_setActive($IUSBDeviceFilter, !$val); # Always set to the opposite
-    &fill_list_usbfilters($vmc{IMachine});
+    fill_list_usbfilters($vmc{IMachine});
 }
 
 # Sets the sensitivity depending on whether USB is enabled or not

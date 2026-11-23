@@ -4,8 +4,8 @@ use warnings;
 our (%gui, %vmc);
 
 sub init_edit_io_parallel {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    $gui{d}{Edit}{checkIOParallel}->set_active(&bl(IParallelPort_getEnabled($vmc{IParallelPort})));
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    $gui{d}{Edit}{checkIOParallel}->set_active(bl(IParallelPort_getEnabled($vmc{IParallelPort})));
     $gui{d}{Edit}{gridIOParallel}->set_sensitive($gui{d}{Edit}{checkIOParallel}->get_active()); # Ghost/Unghost other widgets based on parallel enabled
     $gui{d}{Edit}{entryIOParallelpath}->set_text(IParallelPort_getPath($vmc{IParallelPort}));
     my $pirq = IParallelPort_getIRQ($vmc{IParallelPort});
@@ -24,7 +24,7 @@ sub init_edit_io_parallel {
         $gui{d}{Edit}{entryIOParallelio}->set_sensitive(1);
     }
 
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Whether a parallel port is enabled
@@ -36,7 +36,7 @@ sub io_par {
         # Set path when first enabled, avoids VB chucking a no path specified warning
         if ($state and !$gui{d}{Edit}{entryIOParallelpath}->get_text()) {
             $gui{d}{Edit}{entryIOParallelpath}->set_text('/dev/parport0');
-            &io_par_path($gui{d}{Edit}{entryIOParallelpath});
+            io_par_path($gui{d}{Edit}{entryIOParallelpath});
         }
 
         IParallelPort_setEnabled($vmc{IParallelPort}, $state);
@@ -82,7 +82,7 @@ sub io_par_num {
     my ($widget) = @_;
 
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $portnum = &getsel_combo($widget, 0);
+        my $portnum = getsel_combo($widget, 0);
 
         if ($portnum eq 'LPT1') {
             $gui{d}{Edit}{entryIOParallelirq}->set_text('2');
@@ -98,8 +98,8 @@ sub io_par_num {
         }
 
         if ($portnum ne 'Custom') {
-            &io_par_irq($gui{d}{Edit}{entryIOParallelirq}, 0);
-            &io_par_port($gui{d}{Edit}{entryIOParallelio}, 0);
+            io_par_irq($gui{d}{Edit}{entryIOParallelirq}, 0);
+            io_par_port($gui{d}{Edit}{entryIOParallelio}, 0);
             $gui{d}{Edit}{entryIOParallelirq}->set_sensitive(0);
             $gui{d}{Edit}{entryIOParallelio}->set_sensitive(0);
         }

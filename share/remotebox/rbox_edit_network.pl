@@ -6,7 +6,7 @@ our (%gui, %signal, %vmc);
 # NOTE: Despite what the SDK claims HostOnlyNetwork is not implemented
 
 sub init_edit_network {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
     $gui{d}{Edit}{cboxNetworkAdapter}->signal_handler_block($signal{Edit_cboxNetworkAdapter_changed});
     $gui{d}{Edit}{cboxNetworkAttached}->signal_handler_block($signal{Edit_cboxNetworkAttached_changed});
     $gui{d}{Edit}{cboxNetworkName}->signal_handler_block($signal{Edit_cboxNetworkName_changed});
@@ -16,38 +16,38 @@ sub init_edit_network {
     $gui{d}{Edit}{lstoreNetworkGeneric}->clear();
     $gui{d}{Edit}{lstoreNetworkInternal}->clear();
     $gui{d}{Edit}{tbNetworkGenericprop}->set_text('');
-    my $INetworkAdapter = IMachine_getNetworkAdapter($vmc{IMachine}, &getsel_combo($gui{d}{Edit}{cboxNetwork}, 1));
+    my $INetworkAdapter = IMachine_getNetworkAdapter($vmc{IMachine}, getsel_combo($gui{d}{Edit}{cboxNetwork}, 1));
     my $AttachType = INetworkAdapter_getAttachmentType($INetworkAdapter);
     my @IHostNetworkInterface = IHost_getNetworkInterfaces($vmc{IHost});
-    $gui{d}{Edit}{checkNetwork}->set_active(&bl(INetworkAdapter_getEnabled($INetworkAdapter)));
+    $gui{d}{Edit}{checkNetwork}->set_active(bl(INetworkAdapter_getEnabled($INetworkAdapter)));
     my $netenabled = $gui{d}{Edit}{checkNetwork}->get_active();
     $gui{d}{Edit}{gridNetwork}->set_sensitive($netenabled); # Ghost/Unghost other widgets based on net enabled
     $gui{d}{Edit}{gridNetworkAdv}->set_sensitive($netenabled);
-    $gui{d}{Edit}{checkNetworkCable}->set_active(&bl(INetworkAdapter_getCableConnected($INetworkAdapter)));
+    $gui{d}{Edit}{checkNetworkCable}->set_active(bl(INetworkAdapter_getCableConnected($INetworkAdapter)));
     $gui{d}{Edit}{entryNetworkMAC}->set_text(INetworkAdapter_getMACAddress($INetworkAdapter));
-    &combobox_set_active_text($gui{d}{Edit}{cboxNetworkAdapter}, INetworkAdapter_getAdapterType($INetworkAdapter), 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxNetworkAttached}, $AttachType, 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxNetworkPromisc}, INetworkAdapter_getPromiscModePolicy($INetworkAdapter), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxNetworkAdapter}, INetworkAdapter_getAdapterType($INetworkAdapter), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxNetworkAttached}, $AttachType, 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxNetworkPromisc}, INetworkAdapter_getPromiscModePolicy($INetworkAdapter), 1);
 
-    if ($AttachType eq 'Bridged') { &net_gui_bridged($INetworkAdapter); }
+    if ($AttachType eq 'Bridged') { net_gui_bridged($INetworkAdapter); }
     elsif ($AttachType eq 'HostOnlyNetwork') {
         # HostOnlyNetwork: Does not seem to be implemented even though SDK says it is - so make it HostOnly instead
         INetworkAdapter_setAttachmentType($INetworkAdapter, 'HostOnly');
-        &net_gui_hon_named($INetworkAdapter);
+        net_gui_hon_named($INetworkAdapter);
     }
-    elsif ($AttachType eq 'HostOnly') { &net_gui_hon_named($INetworkAdapter); }
-    elsif ($AttachType eq 'Internal') { &net_gui_internal($INetworkAdapter); }
-    elsif ($AttachType eq 'Generic') { &net_gui_generic($INetworkAdapter); }
-    elsif ($AttachType eq 'NATNetwork') { &net_gui_nat_named($INetworkAdapter); }
-    elsif ($AttachType eq 'NAT') { &net_gui_nat(); }
-    else {&net_gui_notattached($INetworkAdapter); } # Cloud and Null
+    elsif ($AttachType eq 'HostOnly') { net_gui_hon_named($INetworkAdapter); }
+    elsif ($AttachType eq 'Internal') { net_gui_internal($INetworkAdapter); }
+    elsif ($AttachType eq 'Generic') { net_gui_generic($INetworkAdapter); }
+    elsif ($AttachType eq 'NATNetwork') { net_gui_nat_named($INetworkAdapter); }
+    elsif ($AttachType eq 'NAT') { net_gui_nat(); }
+    else {net_gui_notattached($INetworkAdapter); } # Cloud and Null
 
     $gui{d}{Edit}{cboxNetworkAdapter}->signal_handler_unblock($signal{Edit_cboxNetworkAdapter_changed});
     $gui{d}{Edit}{cboxNetworkAttached}->signal_handler_unblock($signal{Edit_cboxNetworkAttached_changed});
     $gui{d}{Edit}{cboxNetworkName}->signal_handler_unblock($signal{Edit_cboxNetworkName_changed});
     $gui{d}{Edit}{ecboxNetworkGeneric}->signal_handler_unblock($signal{Edit_ecboxNetworkGeneric_changed});
     $gui{d}{Edit}{ecboxNetworkInternal}->signal_handler_unblock($signal{Edit_ecboxNetworkInternal_changed});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Whether the adapter is enabled
@@ -55,7 +55,7 @@ sub net_toggle {
     my ($widget) = @_;
         if ($vmc{SessionType} eq 'WriteLock') {
         my $state = $widget->get_active();
-        my $INetworkAdapter = &net_callout();
+        my $INetworkAdapter = net_callout();
         INetworkAdapter_setEnabled($INetworkAdapter, $state);
         $gui{d}{Edit}{gridNetwork}->set_sensitive($state);
         $gui{d}{Edit}{gridNetworkAdv}->set_sensitive($state);
@@ -65,14 +65,14 @@ sub net_toggle {
 # Sets whether the virtual network cable is plugged in or not
 sub net_cable {
     my ($widget) = @_;
-    my $INetworkAdapter = &net_callout();
+    my $INetworkAdapter = net_callout();
     INetworkAdapter_setCableConnected($INetworkAdapter, $widget->get_active());
 }
 
 # Sets whether the network adapter in the VM is allowed to enter promiscuous mode
 sub net_promiscuous {
-    my $INetworkAdapter = &net_callout();
-    INetworkAdapter_setPromiscModePolicy($INetworkAdapter, &getsel_combo($gui{d}{Edit}{cboxNetworkPromisc}, 1));
+    my $INetworkAdapter = net_callout();
+    INetworkAdapter_setPromiscModePolicy($INetworkAdapter, getsel_combo($gui{d}{Edit}{cboxNetworkPromisc}, 1));
 }
 
 # Sets the MAC address for the virtual NIC
@@ -80,7 +80,7 @@ sub net_mac {
     my ($widget) = @_;
 
     if ($vmc{SessionType} eq 'WriteLock') {
-        my $INetworkAdapter = &net_callout();
+        my $INetworkAdapter = net_callout();
         my $mac = $widget->get_text();
         INetworkAdapter_setMACAddress($INetworkAdapter, $mac) if (length($mac) == 12);
     }
@@ -88,7 +88,7 @@ sub net_mac {
 
 # Generates a new MAC address for the virtual NIC
 sub net_mac_regenerate {
-    my $INetworkAdapter = &net_callout();
+    my $INetworkAdapter = net_callout();
     INetworkAdapter_setMACAddress($INetworkAdapter, ''); # Forces a new mac to be generated
     my $mac = INetworkAdapter_getMACAddress($INetworkAdapter);
     $gui{d}{Edit}{entryNetworkMAC}->set_text($mac);
@@ -96,14 +96,14 @@ sub net_mac_regenerate {
 
 sub net_generic_driver {
     my ($widget) = @_;
-    my $INetworkAdapter = &net_callout();
-    my $genericdriver = &getsel_combo($widget, 1);
+    my $INetworkAdapter = net_callout();
+    my $genericdriver = getsel_combo($widget, 1);
     INetworkAdapter_setGenericDriver($INetworkAdapter, $genericdriver) if ($genericdriver);
 }
 
 # Sets the generic drivers properties from the textview
 sub net_generic_properties {
-    my $INetworkAdapter = &net_callout();
+    my $INetworkAdapter = net_callout();
     my @cprops = INetworkAdapter_getProperties($INetworkAdapter, 0); #It Returns a single array. First half is keys, second is values
 
     # Clear out all properties before adding the new ones
@@ -123,34 +123,34 @@ sub net_generic_properties {
         $line =~ m/^(.*)=(.*)$/; # match against equals
         my $key = $1;
         my $value = $2;
-        $line = &strim($line);
+        $line = strim($line);
         INetworkAdapter_setProperty($INetworkAdapter, $key, $value) if ($key and $value);
     }
 }
 
 sub net_adapter_type {
     my ($widget) = @_;
-    my $INetworkAdapter = &net_callout();
-    my $type = &getsel_combo($widget, 1);
+    my $INetworkAdapter = net_callout();
+    my $type = getsel_combo($widget, 1);
     INetworkAdapter_setAdapterType($INetworkAdapter, $type);
 }
 
 sub net_attach {
     my ($widget) = @_;
-    my $INetworkAdapter = &net_callout();
+    my $INetworkAdapter = net_callout();
     $gui{d}{Edit}{cboxNetworkName}->signal_handler_block($signal{Edit_cboxNetworkName_changed});
     $gui{d}{Edit}{ecboxNetworkGeneric}->signal_handler_block($signal{Edit_ecboxNetworkGeneric_changed});
     $gui{d}{Edit}{ecboxNetworkInternal}->signal_handler_block($signal{Edit_ecboxNetworkInternal_changed});
-    my $AttachType = &getsel_combo($widget, 1);
+    my $AttachType = getsel_combo($widget, 1);
     $gui{d}{Edit}{lstoreNetworkName}->clear();
     INetworkAdapter_setAttachmentType($INetworkAdapter, $AttachType);
-    if ($AttachType eq 'Bridged') { &net_gui_bridged($INetworkAdapter); }
-    elsif ($AttachType eq 'HostOnly') { &net_gui_hon_named($INetworkAdapter); }
-    elsif ($AttachType eq 'Internal') { &net_gui_internal($INetworkAdapter); }
-    elsif ($AttachType eq 'Generic') { &net_gui_generic($INetworkAdapter); }
-    elsif ($AttachType eq 'NATNetwork') { &net_gui_nat_named($INetworkAdapter); }
-    elsif ($AttachType eq 'NAT') { &net_gui_nat(); }
-    else {&net_gui_notattached($INetworkAdapter); } # Cloud and Null
+    if ($AttachType eq 'Bridged') { net_gui_bridged($INetworkAdapter); }
+    elsif ($AttachType eq 'HostOnly') { net_gui_hon_named($INetworkAdapter); }
+    elsif ($AttachType eq 'Internal') { net_gui_internal($INetworkAdapter); }
+    elsif ($AttachType eq 'Generic') { net_gui_generic($INetworkAdapter); }
+    elsif ($AttachType eq 'NATNetwork') { net_gui_nat_named($INetworkAdapter); }
+    elsif ($AttachType eq 'NAT') { net_gui_nat(); }
+    else {net_gui_notattached($INetworkAdapter); } # Cloud and Null
 
     $gui{d}{Edit}{ecboxNetworkGeneric}->signal_handler_unblock($signal{Edit_ecboxNetworkGeneric_changed});
     $gui{d}{Edit}{ecboxNetworkInternal}->signal_handler_unblock($signal{Edit_ecboxNetworkInternal_changed});
@@ -159,9 +159,9 @@ sub net_attach {
 }
 
 sub net_name {
-    my $INetworkAdapter = &net_callout();
-    my $AttachType = &getsel_combo($gui{d}{Edit}{cboxNetworkAttached}, 1);
-    my $netname = &getsel_combo($gui{d}{Edit}{cboxNetworkName}, 0);
+    my $INetworkAdapter = net_callout();
+    my $AttachType = getsel_combo($gui{d}{Edit}{cboxNetworkAttached}, 1);
+    my $netname = getsel_combo($gui{d}{Edit}{cboxNetworkName}, 0);
 
     if ($netname) { # If there's no netname then we cannot attach (eg there may be not HON or NATNets defined)
         if ($AttachType eq 'Bridged') { INetworkAdapter_setBridgedInterface($INetworkAdapter, $netname) if defined($netname); }
@@ -172,13 +172,13 @@ sub net_name {
 
 sub net_name_internal {
     my ($widget) = @_;
-    my $INetworkAdapter = &net_callout();
+    my $INetworkAdapter = net_callout();
     my $name = $widget->get_child->get_text();
     INetworkAdapter_setInternalNetwork($INetworkAdapter, $name) if ($name);
 }
 
 sub net_callout {
-    my $slot = &getsel_combo($gui{d}{Edit}{cboxNetwork}, 1);
+    my $slot = getsel_combo($gui{d}{Edit}{cboxNetwork}, 1);
     my $INetworkAdapter = IMachine_getNetworkAdapter($vmc{IMachine}, $slot);
     return $INetworkAdapter;
 }
@@ -209,7 +209,7 @@ sub net_gui_bridged {
     $gui{d}{Edit}{labelNetworkGenericprop}->hide();
     $gui{d}{Edit}{frameNetworkGenericprop}->hide();
     $gui{d}{Edit}{tvNetworkGenericprop}->hide();
-    &combobox_set_active_text($gui{d}{Edit}{cboxNetworkPromisc}, INetworkAdapter_getPromiscModePolicy($INetworkAdapter), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxNetworkPromisc}, INetworkAdapter_getPromiscModePolicy($INetworkAdapter), 1);
 }
 
 sub net_gui_notattached {

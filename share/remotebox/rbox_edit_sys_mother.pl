@@ -5,11 +5,11 @@ our (%gui, %vmc, %signal);
 
 # Sets up the initial state of the system tab of the edit settings dialog
 sub init_edit_sys_mother {
-    &set_pointer($gui{d}{Edit}{dialog}, 'watch');
-    my $vhost = &vhost();
+    set_pointer($gui{d}{Edit}{dialog}, 'watch');
+    my $vhost = vhost();
     $gui{d}{Edit}{buttonSysBootup}->set_sensitive(0);
     $gui{d}{Edit}{buttonSysBootdown}->set_sensitive(0);
-    &clr_list_generic($gui{d}{Edit}{treeviewSysBoot}, $signal{Edit_treeviewSysBoot_cursorchanged});
+    clr_list_generic($gui{d}{Edit}{treeviewSysBoot}, $signal{Edit_treeviewSysBoot_cursorchanged});
 
     # Secureboot requires EFI so only enable it. It may also need to be initialised ultimately
     $gui{d}{Edit}{checkSysSecure}->signal_handler_block($signal{Edit_checkSysSecure_toggled});
@@ -20,7 +20,7 @@ sub init_edit_sys_mother {
         $gui{d}{Edit}{buttonSysSecure}->set_sensitive(1);
         my $IUefiVariableStore = INvramStore_getUefiVariableStore($vmc{INvramStore});
         if (!defined($IUefiVariableStore)) { $gui{d}{Edit}{checkSysSecure}->set_active(0); }
-        else { $gui{d}{Edit}{checkSysSecure}->set_active(&bl(IUefiVariableStore_getSecureBootEnabled($IUefiVariableStore)));}
+        else { $gui{d}{Edit}{checkSysSecure}->set_active(bl(IUefiVariableStore_getSecureBootEnabled($IUefiVariableStore)));}
     }
     else {
         $gui{d}{Edit}{checkSysEFI}->set_active(0);
@@ -32,11 +32,11 @@ sub init_edit_sys_mother {
     $gui{d}{Edit}{checkSysSecure}->signal_handler_unblock($signal{Edit_checkSysSecure_toggled});
     $gui{d}{Edit}{sbSysMemory}->set_range($$vhost{minguestram}, $$vhost{memsize});
     $gui{d}{Edit}{sbSysMemory}->set_value(IMachine_getMemorySize($vmc{IMachine}));
-    $gui{d}{Edit}{checkSysAPIC}->set_active(&bl(IFirmwareSettings_getIOAPICEnabled($vmc{IFirmwareSettings})));
-    $gui{d}{Edit}{checkSysUTC}->set_active(&bl(IPlatform_getRTCUseUTC($vmc{IPlatform})));
-    &combobox_set_active_text($gui{d}{Edit}{cboxSysChipset}, IPlatform_getChipsetType($vmc{IPlatform}), 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxSysPoint}, IMachine_getPointingHIDType($vmc{IMachine}), 1);
-    &combobox_set_active_text($gui{d}{Edit}{cboxSysKeyboard}, IMachine_getKeyboardHIDType($vmc{IMachine}), 1);
+    $gui{d}{Edit}{checkSysAPIC}->set_active(bl(IFirmwareSettings_getIOAPICEnabled($vmc{IFirmwareSettings})));
+    $gui{d}{Edit}{checkSysUTC}->set_active(bl(IPlatform_getRTCUseUTC($vmc{IPlatform})));
+    combobox_set_active_text($gui{d}{Edit}{cboxSysChipset}, IPlatform_getChipsetType($vmc{IPlatform}), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxSysPoint}, IMachine_getPointingHIDType($vmc{IMachine}), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxSysKeyboard}, IMachine_getKeyboardHIDType($vmc{IMachine}), 1);
 
     # Default to maxbootpos+1 to mean 'not set in boot order' but this number needs to be higher than
     # true boot order numbers so the disabled devices appear at the end of the list.
@@ -80,9 +80,9 @@ sub init_edit_sys_mother {
     }
 
     my $ITrustedPlatformModule = IMachine_getTrustedPlatformModule($vmc{IMachine});
-    &combobox_set_active_text($gui{d}{Edit}{cboxSysTPM}, ITrustedPlatformModule_getType($ITrustedPlatformModule), 1);
+    combobox_set_active_text($gui{d}{Edit}{cboxSysTPM}, ITrustedPlatformModule_getType($ITrustedPlatformModule), 1);
     $gui{d}{Edit}{cboxSysTPM}->signal_handler_unblock($signal{Edit_cboxSysTPM_changed});
-    &set_pointer($gui{d}{Edit}{dialog});
+    set_pointer($gui{d}{Edit}{dialog});
 }
 
 # Sets the amount of main system memory
@@ -106,14 +106,14 @@ sub sys_mother_efi {
 
             if (!$IUefiVariableStore) {
                 # If there's no UEFI variable store, then make one
-                &show_err_msg('noefivariables', 0, '');
+                show_err_msg('noefivariables', 0, '');
                 INvramStore_initUefiVariableStore($vmc{INvramStore});
                 $IUefiVariableStore = INvramStore_getUefiVariableStore($vmc{INvramStore});
                 IUefiVariableStore_enrollDefaultMsSignatures($IUefiVariableStore);
                 IUefiVariableStore_enrollOraclePlatformKey($IUefiVariableStore);
             }
 
-            $gui{d}{Edit}{checkSysSecure}->set_active(&bl(IUefiVariableStore_getSecureBootEnabled($IUefiVariableStore)));
+            $gui{d}{Edit}{checkSysSecure}->set_active(bl(IUefiVariableStore_getSecureBootEnabled($IUefiVariableStore)));
             $gui{d}{Edit}{checkSysSecure}->set_sensitive(1);
             $gui{d}{Edit}{buttonSysSecure}->set_sensitive(1);
         }
@@ -159,7 +159,7 @@ sub sys_mother_restore_secureboot {
 sub sys_mother_tpm {
     if ($vmc{SessionType} eq 'WriteLock') {
         my $ITrustedPlatformModule = IMachine_getTrustedPlatformModule($vmc{IMachine});
-        ITrustedPlatformModule_setType($ITrustedPlatformModule, &getsel_combo($gui{d}{Edit}{cboxSysTPM}, 1));
+        ITrustedPlatformModule_setType($ITrustedPlatformModule, getsel_combo($gui{d}{Edit}{cboxSysTPM}, 1));
     }
 }
 
@@ -174,7 +174,7 @@ sub sys_mother_secureboot {
         my $IUefiVariableStore = INvramStore_getUefiVariableStore($vmc{INvramStore});
 
         if (!defined($IUefiVariableStore)) {
-            &show_err_msg('nouefivarfile', 0);
+            show_err_msg('nouefivarfile', 0);
             INvramStore_initUefiVariableStore($vmc{INvramStore}, 0);
             $IUefiVariableStore = INvramStore_getUefiVariableStore($vmc{INvramStore});
         };
@@ -185,17 +185,17 @@ sub sys_mother_secureboot {
 
 # Sets the emulated pointing (eg mouse) device
 sub sys_mother_pointer {
-    if ($vmc{SessionType} eq 'WriteLock') { IMachine_setPointingHIDType($vmc{IMachine}, &getsel_combo($gui{d}{Edit}{cboxSysPoint}, 1)); }
+    if ($vmc{SessionType} eq 'WriteLock') { IMachine_setPointingHIDType($vmc{IMachine}, getsel_combo($gui{d}{Edit}{cboxSysPoint}, 1)); }
 }
 
 # Sets the emulatyed keyboard type
 sub sys_mother_keyboard {
-    if ($vmc{SessionType} eq 'WriteLock') { IMachine_setKeyboardHIDType($vmc{IMachine}, &getsel_combo($gui{d}{Edit}{cboxSysKeyboard}, 1)); }
+    if ($vmc{SessionType} eq 'WriteLock') { IMachine_setKeyboardHIDType($vmc{IMachine}, getsel_combo($gui{d}{Edit}{cboxSysKeyboard}, 1)); }
 }
 
 # Sets the emulated motherboard chipset
 sub sys_mother_chipset {
-    if ($vmc{SessionType} eq 'WriteLock') { IPlatform_setChipsetType($vmc{IPlatform}, &getsel_combo($gui{d}{Edit}{cboxSysChipset}, 1)); }
+    if ($vmc{SessionType} eq 'WriteLock') { IPlatform_setChipsetType($vmc{IPlatform}, getsel_combo($gui{d}{Edit}{cboxSysChipset}, 1)); }
 }
 
 # Moves the boot device to a higher priority

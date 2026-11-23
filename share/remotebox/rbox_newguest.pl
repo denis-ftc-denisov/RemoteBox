@@ -4,8 +4,8 @@ use warnings;
 our (%gui, %signal, %prefs);
 
 sub show_dialog_new_guest {
-    my $vhost = &vhost();
-    my ($osfam, $osver) = &osfamver();
+    my $vhost = vhost();
+    my ($osfam, $osver) = osfamver();
     $gui{d}{New}{checkStartupDisk}->set_active(1);
     $gui{d}{New}{cboxFormat}->set_active(0);
     $gui{d}{New}{radioDynamic}->set_sensitive(1);
@@ -40,7 +40,7 @@ sub show_dialog_new_guest {
         $gui{d}{New}{cboxFamily}->set_active_iter($iter) if ($fam eq 'Windows');
     }
 
-    my $IMediumRef = &get_all_media('HardDisk');
+    my $IMediumRef = get_all_media('HardDisk');
 
     if (keys(%$IMediumRef) > 0) {
         foreach my $hd (sort { lc($$IMediumRef{$a}) cmp lc($$IMediumRef{$b}) } (keys(%$IMediumRef))) {
@@ -57,18 +57,18 @@ sub show_dialog_new_guest {
     $gui{d}{New}{cboxVersion}->signal_handler_unblock($signal{New_cboxVersion_changed});
     $gui{d}{New}{cboxFamily}->signal_emit('changed'); # Force update of other fields based on OS
     $gui{d}{New}{cboxVersion}->signal_emit('changed'); # Force update of other fields based on OS
-    &fill_list_new_guest_dvd();
+    fill_list_new_guest_dvd();
 
     do {
         my $response = $gui{d}{New}{dialog}->run();
 
         if ($response eq 'ok') {
             # Other entries do not require validation
-            if (!$gui{d}{New}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
+            if (!$gui{d}{New}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
             else {
                 $gui{d}{New}{dialog}->hide();
                 my $name = $gui{d}{New}{entryName}->get_text();
-                my $IMachine = IVirtualBox_createMachine($gui{websn}, '', $name, &getsel_combo($gui{d}{New}{cboxVersion}, 2), '', &getsel_combo($gui{d}{New}{cboxVersion}, 1), 'UUID=' . &generate_uuid(), '');
+                my $IMachine = IVirtualBox_createMachine($gui{websn}, '', $name, getsel_combo($gui{d}{New}{cboxVersion}, 2), '', getsel_combo($gui{d}{New}{cboxVersion}, 1), 'UUID=' . generate_uuid(), '');
 
                 if ($IMachine) {
                     IMachine_applyDefaults($IMachine);
@@ -89,8 +89,8 @@ sub show_dialog_new_guest {
 
                     IMachine_saveSettings($IMachine);
                     IVirtualBox_registerMachine($gui{websn}, $IMachine);
-                    &addrow_msg_log("Created a new guest: $name");
-                    my $sref = &get_session($IMachine);
+                    addrow_msg_log("Created a new guest: $name");
+                    my $sref = get_session($IMachine);
 
                     if ($$sref{Type} eq 'WriteLock') {
 
@@ -103,32 +103,32 @@ sub show_dialog_new_guest {
                                              mode       => 'ReadWrite',
                                              size       => $gui{d}{New}{sbSize}->get_value_as_int() * 1048576,
                                              allocation => ['Standard'], # Standard == Dynamic Allocation
-                                             imgformat  => &getsel_combo($gui{d}{New}{cboxFormat}, 1),
-                                             location   => &rcatdir($$vhost{machinedir}, $name));
+                                             imgformat  => getsel_combo($gui{d}{New}{cboxFormat}, 1),
+                                             location   => rcatdir($$vhost{machinedir}, $name));
 
                                 if ($gui{d}{New}{radioFixed}->get_active()) { $newhd{allocation} = ['Fixed']; }
                                 elsif ($gui{d}{New}{radioSplit}->get_active()) { $newhd{allocation} = ['VmdkSplit2G']; }
-                                $IMediumHD = &create_new_dskimg(\%newhd);
+                                $IMediumHD = create_new_dskimg(\%newhd);
                             }
-                            else { $IMediumHD = &getsel_combo($gui{d}{New}{cboxExistingDisk}, 1); }
+                            else { $IMediumHD = getsel_combo($gui{d}{New}{cboxExistingDisk}, 1); }
 
-                            my %os = %{ $$osver{&getsel_combo($gui{d}{New}{cboxVersion}, 1)} };
+                            my %os = %{ $$osver{getsel_combo($gui{d}{New}{cboxVersion}, 1)} };
                             my $IStorCtrHD = IMachine_getStorageControllerByInstance($$sref{IMachine}, $os{recommendedHDStorageBus}, 0);
-                            my %hdaddress = &get_free_deviceport($$sref{IMachine}, $IStorCtrHD);
+                            my %hdaddress = get_free_deviceport($$sref{IMachine}, $IStorCtrHD);
                             IMachine_attachDevice($$sref{IMachine}, $os{recommendedHDStorageBus}, $hdaddress{portnum}, $hdaddress{devnum}, 'HardDisk', $IMediumHD) if ($IMediumHD);
                             my $IStorCtrDVD = IMachine_getStorageControllerByInstance($$sref{IMachine}, $os{recommendedDVDStorageBus}, 0); # Attach Empty CD/DVD Device
-                            my %dvdaddress = &get_free_deviceport($$sref{IMachine}, $IStorCtrDVD);
+                            my %dvdaddress = get_free_deviceport($$sref{IMachine}, $IStorCtrDVD);
                             IMachine_attachDevice($$sref{IMachine}, $os{recommendedDVDStorageBus}, $dvdaddress{portnum}, $dvdaddress{devnum}, 'DVD', '');
 
                             if ($os{recommendedFloppy} eq 'true') {
                                 my $IStorCtrFloppy = IMachine_getStorageControllerByInstance($$sref{IMachine}, 'Floppy', 0);
-                                my %floppyaddress = &get_free_deviceport($$sref{IMachine}, $IStorCtrFloppy);
+                                my %floppyaddress = get_free_deviceport($$sref{IMachine}, $IStorCtrFloppy);
                                 IMachine_attachDevice($$sref{IMachine}, 'Floppy', $floppyaddress{portnum}, $floppyaddress{devnum}, 'Floppy', '');
                             }
                         }
 
                         # ISO Section
-                        my $IMediumDVD = &getsel_combo($gui{d}{New}{cboxISO}, 1);
+                        my $IMediumDVD = getsel_combo($gui{d}{New}{cboxISO}, 1);
                         if (defined($IMediumDVD)) {
                             my @IMediumAttachment = IMachine_getMediumAttachments($$sref{IMachine});
                             foreach my $attach (@IMediumAttachment) {
@@ -142,9 +142,9 @@ sub show_dialog_new_guest {
                     }
 
                     ISession_unlockMachine($$sref{ISession}) if (ISession_getState($$sref{ISession}) eq 'Locked');
-                    &fill_list_guest();
+                    fill_list_guest();
                 }
-                else { &show_err_msg('createguest', 0, " ($name)"); }
+                else { show_err_msg('createguest', 0, " ($name)"); }
             }
         }
         else { $gui{d}{New}{dialog}->hide(); }
@@ -154,7 +154,7 @@ sub show_dialog_new_guest {
 
 # Shows the dialog for creating a new clone
 sub show_dialogClone {
-    my $gref = &getsel_list_guest();
+    my $gref = getsel_list_guest();
     $gui{d}{Clone}{entryName}->set_text($$gref{Name} . '-Clone-' . int(rand(999999)));
 
     do {
@@ -163,7 +163,7 @@ sub show_dialogClone {
 
         if ($response eq 'ok') {
             # No validation needed for other entries
-            if (!$gui{d}{Clone}{entryName}->get_text()) { &show_err_msg('invalidname', 0); }
+            if (!$gui{d}{Clone}{entryName}->get_text()) { show_err_msg('invalidname', 0); }
             else {
                 $gui{d}{Clone}{dialog}->hide;
 
@@ -184,8 +184,8 @@ sub show_dialogClone {
                 push(@{$newclone{options}}, 'KeepNATMACs') if ($gui{d}{Clone}{cboxMAC}->get_active() == 1); # New MACs are generated by default
                 push(@{$newclone{options}}, 'KeepDiskNames') if ($gui{d}{Clone}{checkKeepDiskName}->get_active() == 1);
                 push(@{$newclone{options}}, 'KeepHwUUIDs') if ($gui{d}{Clone}{checkKeepUUIDs}->get_active() == 1);
-                &create_new_clone($gref, \%newclone);
-                &fill_list_guest();
+                create_new_clone($gref, \%newclone);
+                fill_list_guest();
             }
         }
         else { $gui{d}{Clone}{dialog}->hide; }
@@ -241,15 +241,15 @@ sub get_free_deviceport {
 
 # Creates a clone of a guest
 sub create_new_clone {
-    my $vhost = &vhost();
+    my $vhost = vhost();
     my ($srcgref, $cloneref) = @_;
     # We create a new 'empty' guest
-    my $cloneIMachine = IVirtualBox_createMachine($gui{websn}, '', $$cloneref{name}, 'x86', '', $$srcgref{Osid}, &generate_uuid(), '');
+    my $cloneIMachine = IVirtualBox_createMachine($gui{websn}, '', $$cloneref{name}, 'x86', '', $$srcgref{Osid}, generate_uuid(), '');
     my $IProgress;
 
     if ($$cloneref{linked}) { # Is cancellable
         # Linked clones require a snapshot of the source to be taken first. The IMachine must be of that snapshot
-        &take_snapshot("Base for $$srcgref{Name} and $$cloneref{name}", "Snapshot automatically taken when cloning $$srcgref{Name} to $$cloneref{name}");
+        take_snapshot("Base for $$srcgref{Name} and $$cloneref{name}", "Snapshot automatically taken when cloning $$srcgref{Name} to $$cloneref{name}");
         my $snapIMachine = ISnapshot_getMachine(IMachine_getCurrentSnapshot($$srcgref{IMachine}));
         $IProgress = IMachine_cloneTo($snapIMachine, $cloneIMachine, $$cloneref{mode}, @{$$cloneref{options}})
     }
@@ -257,41 +257,41 @@ sub create_new_clone {
         $IProgress = IMachine_cloneTo($$srcgref{IMachine}, $cloneIMachine, $$cloneref{mode}, @{$$cloneref{options}});
     }
 
-    &show_progress_window($IProgress, 'Cloning Guest', $gui{pb}{ProgressClone}) if ($IProgress); # MUST NOT USE $cloneIMachine until progress is complete, otherwise it waits
+    show_progress_window($IProgress, 'Cloning Guest', $gui{pb}{ProgressClone}) if ($IProgress); # MUST NOT USE $cloneIMachine until progress is complete, otherwise it waits
 
     if (IProgress_getCanceled($IProgress) eq 'true') {
-        &addrow_msg_log("Cancelled creation of the clone $$cloneref{name}");
+        addrow_msg_log("Cancelled creation of the clone $$cloneref{name}");
         IManagedObjectRef_release($cloneIMachine);
         $cloneIMachine = undef;
     }
     else {
         IMachine_saveSettings($cloneIMachine);
         IVirtualBox_registerMachine($gui{websn}, $cloneIMachine);
-        &addrow_msg_log("Cloned $$srcgref{Name} to $$cloneref{name}");
+        addrow_msg_log("Cloned $$srcgref{Name} to $$cloneref{name}");
     }
 }
 
 # Creates a clone of a disk image
 sub create_new_dskimg_clone {
     my ($newref, $srcIMedium) = @_;
-    my $imgfile = &rcatfile($$newref{location}, $$newref{diskname});
-    $imgfile = &add_ext_if_needed($imgfile, $$newref{imgformat});
+    my $imgfile = rcatfile($$newref{location}, $$newref{diskname});
+    $imgfile = add_ext_if_needed($imgfile, $$newref{imgformat});
     my $IMedium = IVirtualBox_createMedium($gui{websn}, $$newref{imgformat}, $imgfile, $$newref{mode}, $$newref{devicetype});
     my $IProgress = IMedium_cloneTo($srcIMedium, $IMedium, $$newref{allocation}, undef);
-    &show_progress_window($IProgress, 'Copying or Cloning Disk Image', $gui{pb}{ProgressMediaCreate});
+    show_progress_window($IProgress, 'Copying or Cloning Disk Image', $gui{pb}{ProgressMediaCreate});
 
     if (IProgress_getCanceled($IProgress) eq 'true') {
-        &addrow_msg_log("Cancelled disk copy or cloning: $imgfile");
+        addrow_msg_log("Cancelled disk copy or cloning: $imgfile");
         IManagedObjectRef_release($IMedium);
         $IMedium = undef;
     }
     elsif (IMedium_refreshState($IMedium) eq 'NotCreated') {
-        &show_err_msg('diskimgcreation', 0, "Disk Image: $imgfile");
+        show_err_msg('diskimgcreation', 0, "Disk Image: $imgfile");
         IManagedObjectRef_release($IMedium);
         $IMedium = undef;
     }
     else {
-        &addrow_msg_log("Copied or cloned disk image to new file: $imgfile");
+        addrow_msg_log("Copied or cloned disk image to new file: $imgfile");
     }
 
     Gtk3::main_iteration while Gtk3::events_pending;
@@ -301,25 +301,25 @@ sub create_new_dskimg_clone {
 # Creates a new hard disk or floppy image and shows a progress window
 sub create_new_dskimg {
     my ($newref) = @_;
-    my $imgfile = &rcatfile($$newref{location}, $$newref{diskname});
-    $imgfile = &add_ext_if_needed($imgfile, $$newref{imgformat});
+    my $imgfile = rcatfile($$newref{location}, $$newref{diskname});
+    $imgfile = add_ext_if_needed($imgfile, $$newref{imgformat});
     my $IMedium = IVirtualBox_createMedium($gui{websn}, $$newref{imgformat}, $imgfile, $$newref{mode}, $$newref{devicetype});
     # Note: Modified in the vboxService.pm. We expect an array reference in $$newref{allocation}
     my $IProgress = IMedium_createBaseStorage($IMedium, $$newref{size}, @{$$newref{allocation}});
-    &show_progress_window($IProgress, 'Creating Disk Image', $gui{pb}{ProgressMediaCreate});
+    show_progress_window($IProgress, 'Creating Disk Image', $gui{pb}{ProgressMediaCreate});
 
     if (IProgress_getCanceled($IProgress) eq 'true') {
-        &addrow_msg_log("Cancelled disk image creation: $imgfile");
+        addrow_msg_log("Cancelled disk image creation: $imgfile");
         IManagedObjectRef_release($IMedium);
         $IMedium = undef;
     }
     elsif (IMedium_refreshState($IMedium) eq 'NotCreated') {
-        &show_err_msg('diskimgcreation', 0, "Disk Image: $imgfile");
+        show_err_msg('diskimgcreation', 0, "Disk Image: $imgfile");
         IManagedObjectRef_release($IMedium);
         $IMedium = undef;
     }
     else {
-        &addrow_msg_log("Created new disk image: $imgfile");
+        addrow_msg_log("Created new disk image: $imgfile");
     }
 
     Gtk3::main_iteration while Gtk3::events_pending;
@@ -328,8 +328,8 @@ sub create_new_dskimg {
 
 sub newgen_osfam {
     my ($combofam, $combover) = @_;
-    my ($osfam, $osver) = &osfamver();
-    my $fam = &getsel_combo($combofam, 1);
+    my ($osfam, $osver) = osfamver();
+    my $fam = getsel_combo($combofam, 1);
     $combofam->signal_handler_block($signal{New_cboxFamily_changed}); # Block to avoid signal emission when changing
     $combover->signal_handler_block($signal{New_cboxVersion_changed});
     $gui{d}{New}{lstoreVersion}->clear();
@@ -349,8 +349,8 @@ sub newgen_osfam {
 
 sub newgen_osver {
     my ($combover, $combofam) = @_;
-    my $osver = &osver();
-    my $ver = &getsel_combo($combover, 1);
+    my $osver = osver();
+    my $ver = getsel_combo($combover, 1);
     $combofam->signal_handler_block($signal{New_cboxFamily_changed}); # Avoid signal emission when changing
     $combover->signal_handler_block($signal{New_cboxVersion_changed});
     $gui{d}{New}{sbMemory}->set_value($$osver{$ver}{recommendedRAM});
@@ -398,7 +398,7 @@ sub clone_type {
 # Handle the radio button sensitivity when selecting an image format when
 # creating a new hd for a new guest
 sub sens_hdformatchanged {
-    my $format = &getsel_combo($gui{d}{New}{cboxFormat}, 1);
+    my $format = getsel_combo($gui{d}{New}{cboxFormat}, 1);
     $gui{d}{New}{radioDynamic}->set_active(1);
 
     if ($format eq 'vmdk') {

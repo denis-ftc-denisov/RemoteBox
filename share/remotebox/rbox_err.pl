@@ -148,7 +148,7 @@ our (%gui);
         my ($key, $surpress, $append) = @_;
         my ($title, $body, $type) = @{ $err{$key} };
         $body .= "\n$append" if ($append);
-        &addrow_msg_log("Error / Warning Dialog:    $title:    $body");
+        addrow_msg_log("Error / Warning Dialog:    $title:    $body");
 
         # Don't show the dialog if it has been surpressed
         if (!$surpress) {
@@ -172,7 +172,7 @@ sub show_invalid_object_msg {
                'the connection may be in an unknown state. Disconnecting will try to recover ' .
                "but will require you to reconnect.\n\nAdditional:\n";
     $body .= $append if ($append);
-    &addrow_msg_log("Error Dialog:    Invalid Object Reference:    $body");
+    addrow_msg_log("Error Dialog:    Invalid Object Reference:    $body");
     $gui{d}{InvalidObj}{dialog}->format_secondary_markup($body);
     $gui{d}{InvalidObj}{dialog}->show_all();
     my $response = $gui{d}{InvalidObj}{dialog}->run();
@@ -186,14 +186,14 @@ sub vboxerror {
 
     if (ref($res)) {
         if ($res->faultstring =~ m/Invalid managed object reference/) {
-            my $response = &show_invalid_object_msg($res->faultstring);
+            my $response = show_invalid_object_msg($res->faultstring);
             if ($response eq 'cancel') {
                 $gui{websn} = undef; # Invalidate current session to prevent deep recursion
-                &virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
+                virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
             }
             # OK means continue (ie do nothing) - Cancel means disconnect
         }
-        else { &show_err_msg('webservice', 0, $res->faultstring); }
+        else { show_err_msg('webservice', 0, $res->faultstring); }
     }
     elsif (defined($$soap{_transport}{_proxy}{_http_response}{_content})) {
         # Fall back to this work-around for what appears to be a bug in some editions of perl soap lite
@@ -202,12 +202,12 @@ sub vboxerror {
         my $rawxml = $$soap{_transport}{_proxy}{_http_response}{_content};
         $rawxml =~ m/\<faultstring\>(.*)\<\/faultstring\>/;
         $errmsg = $1 if ($1);
-        &show_err_msg('webservice', 0, $errmsg);
+        show_err_msg('webservice', 0, $errmsg);
     }
     else {
         $gui{websn} = undef; # Invalidate current session to prevent deep recursion
-        &virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
-        &show_err_msg('transport', 0, $soap->transport->status);
+        virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
+        show_err_msg('transport', 0, $soap->transport->status);
     }
 }
 
@@ -217,13 +217,13 @@ sub vboxlogonerror {
         my ($soap, $res) = @_;
 
         if ($soap->transport->status =~ m/internal server error/i) {
-            &show_err_msg('connect', 0, 'Login Denied. Please check your login credentials');
+            show_err_msg('connect', 0, 'Login Denied. Please check your login credentials');
         }
         else {
-            &show_err_msg('connect', 0, $soap->transport->status);
+            show_err_msg('connect', 0, $soap->transport->status);
         }
         $gui{websn} = undef; # Invalidate current session to prevent deep recursion
-        &virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
+        virtualbox_logoff(1); # Cleanup - but logoff will not happen because session is invalidated
 }
 
 1;
