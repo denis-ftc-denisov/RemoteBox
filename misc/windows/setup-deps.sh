@@ -17,7 +17,8 @@ export PATH="$MINGW_PREFIX/bin/site_perl:$MINGW_PREFIX/bin/core_perl:$PATH"
 
 # Runtime: Perl, GTK 3, the introspection data Perl's Gtk3 module binds to and
 # the Perl modules MSYS2 already packages.
-# Build-only: compiler, make and pkg-config for the XS modules built by cpanm.
+# Build-only: compiler, make and pkg-config for the XS modules built by cpanm,
+# NSIS for the installer made by make-bundle.sh.
 pacman -S --needed --noconfirm \
     $PKG-perl \
     $PKG-perl-lwp-protocol-https \
@@ -29,6 +30,7 @@ pacman -S --needed --noconfirm \
     $PKG-gcc \
     $PKG-pkgconf \
     $PKG-make \
+    $PKG-nsis \
     make \
     patch
 

@@ -25,6 +25,50 @@ toolchains (Strawberry Perl, TDM-GCC, ...) elsewhere on `PATH` break loading:
     set PATH=C:\msys64\ucrt64\bin;%PATH%
     perl remotebox
 
+## Building the installer
+
+After setting up the build environment (re-run `setup-msys2.ps1` if it was
+set up before NSIS was added to it):
+
+    powershell -ExecutionPolicy Bypass -File misc\windows\make-installer.ps1 [-OutDir <dir>]
+
+This produces, in `misc\windows\build` by default:
+
+* `RemoteBox\` - a self-contained application folder. It can be copied anywhere
+  and started with `RemoteBox.exe`; nothing needs to be installed.
+* `RemoteBox-<version>-win64-setup.exe` - an installer for that folder.
+
+The version is taken from the header of the `remotebox` script.
+
+The application folder holds a trimmed copy of the MSYS2 runtime. DLLs and
+GObject introspection typelibs are found by following dependencies from Perl
+and the namespaces Perl's Gtk3 module loads, so new GTK versions need no
+changes to the script. The build fails if a DLL cannot be resolved or if the
+bundled Perl loads any module from outside the bundle.
+
+    RemoteBox.exe             launcher (no console window)
+    remotebox, share\, docs\  RemoteBox itself
+    runtime\bin               perl.exe and the DLLs it needs
+    runtime\lib               Perl modules, typelibs, gdk-pixbuf loaders
+    runtime\share             GSettings schemas, icon themes, licences
+    runtime\etc               CA certificates for HTTPS connections
+
+`RemoteBox.exe` puts `runtime\bin` first in `PATH`, clears `PERL5LIB` and
+similar variables so other Perl installations cannot interfere, and writes
+RemoteBox's output to `%LOCALAPPDATA%\RemoteBox\remotebox.log`. If RemoteBox
+exits with an error, it says so and points to the log.
+
+The installer lets the user choose between installing for all users (Program
+Files, needs admin rights) or just the current user (no admin rights), and the
+destination folder. It adds a Start menu shortcut, an optional desktop
+shortcut and an uninstaller. Silent installation is supported:
+
+    RemoteBox-<version>-win64-setup.exe /S /CurrentUser /D=C:\Path\To\RemoteBox
+    RemoteBox-<version>-win64-setup.exe /S /AllUsers
+
+`/D=` must be the last argument and must not be quoted. Uninstalling leaves
+the user's RemoteBox settings in `%LOCALAPPDATA%` in place.
+
 ## Files
 
 | File | Purpose |
@@ -32,5 +76,9 @@ toolchains (Strawberry Perl, TDM-GCC, ...) elsewhere on `PATH` break loading:
 | `setup-msys2.ps1` | Installs/updates MSYS2, then runs `setup-deps.sh` |
 | `setup-deps.sh` | Installs packages and builds Perl modules inside UCRT64 |
 | `remotebox-dev.cmd` | Runs RemoteBox from the source tree with the right `PATH` |
+| `make-installer.ps1` | Runs `make-bundle.sh` from PowerShell |
+| `make-bundle.sh` | Builds the application folder, launcher and installer |
+| `launcher/` | Source of `RemoteBox.exe` |
+| `remotebox.nsi` | NSIS installer script |
 | `perl5/Msys2ImportLibs.pm` | Build-time fix so XS modules link against GLib's DLL import libraries rather than the static archives |
 | `patches/Cairo-1.109-msys2.patch` | Win64 and cairo 1.18 fixes for the Perl Cairo bindings |
