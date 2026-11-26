@@ -200,7 +200,10 @@ env -i SYSTEMROOT="$SYSTEMROOT" WINDIR="$WINDIR" TEMP="$TEMP" TMP="$TMP" \
     use SOAP::Lite; use LWP::UserAgent; use LWP::Protocol::https; use IO::Socket::SSL;
     use XML::Parser; use Regexp::Common qw(net); use File::Which; use File::Spec::Win32;
     use MIME::Base64; use Digest::MD5; use Time::HiRes; use Socket; use POSIX; use Getopt::Std;
-    Gtk3::init();
+    # Started the way remotebox does, see the comment there
+    Gtk3::disable_setlocale(); Gtk3::init();
+    die "Numbers format with the regional decimal separator after Gtk3::init\n" unless 0.5 eq "0.5";
+    Win32::GetCwd();
     my $w = Gtk3::Window->new("toplevel");
     my $p = Gtk3::Gdk::Pixbuf->new_from_file("$root/share/remotebox/icons/connect_32px.png");
     my $l = Pango::Layout->new(Gtk3::Label->new("x")->get_pango_context);

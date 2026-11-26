@@ -89,10 +89,16 @@ install_patched Cairo Cairo-1.109 \
 
 cpanm --skip-satisfied \
     Cairo::GObject \
-    Glib::Object::Introspection \
-    Gtk3
+    Glib::Object::Introspection
 
 unset PERL5OPT
+
+# Gtk3's tests call gtk_init(), whose setlocale() also changes the locale Perl
+# uses on Windows. With a decimal comma regional format (e.g. Russian) Perl's
+# version checks then fail ("Win32 version 0.27 required--this is only version
+# 0"). RemoteBox avoids this with Gtk3::disable_setlocale(), but the tests
+# cannot. Gtk3 is pure Perl; make-bundle.sh exercises it instead.
+cpanm --notest --skip-satisfied Gtk3
 
 cpanm --notest --skip-satisfied \
     SOAP::Lite
