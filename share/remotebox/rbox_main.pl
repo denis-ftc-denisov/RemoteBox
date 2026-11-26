@@ -289,7 +289,7 @@ sub guest_log_save {
     my $gref = getsel_list_guest();
     my $lognum = $gui{d}{GuestLog}{notebookLog}->get_current_page(); # We choose the log number by the page number
     $gui{d}{LogFileChooser}{dialog}->set_current_name("$$gref{Name}_log$lognum" . '.txt');
-    $gui{d}{LogFileChooser}{dialog}->set_current_folder($ENV{HOME}) if ($ENV{HOME});
+    $gui{d}{LogFileChooser}{dialog}->set_current_folder(Glib::get_home_dir());
     my $response = $gui{d}{LogFileChooser}{dialog}->run();
     $gui{d}{LogFileChooser}{dialog}->hide();
     my $filename = $gui{d}{LogFileChooser}{dialog}->get_filename();
@@ -313,7 +313,7 @@ sub guest_log_save {
 # Save the contents of the message log into a file
 sub save_msg_log {
     $gui{d}{LogFileChooser}{dialog}->set_current_name('remotebox-message-log.txt');
-    $gui{d}{LogFileChooser}{dialog}->set_current_folder($ENV{HOME}) if ($ENV{HOME});
+    $gui{d}{LogFileChooser}{dialog}->set_current_folder(Glib::get_home_dir());
     my $response = $gui{d}{LogFileChooser}{dialog}->run();
     $gui{d}{LogFileChooser}{dialog}->hide();
     my $filename = $gui{d}{LogFileChooser}{dialog}->get_filename();
@@ -1174,7 +1174,7 @@ sub screenshot {
     my $gref = getsel_list_guest();
     my $sref = get_session($$gref{IMachine});
     $gui{d}{ScreenShotFileChooser}{dialog}->set_current_name("$$gref{Name}_screenshot.png");
-    $gui{d}{ScreenShotFileChooser}{dialog}->set_current_folder($ENV{HOME}) if ($ENV{HOME});
+    $gui{d}{ScreenShotFileChooser}{dialog}->set_current_folder(Glib::get_home_dir());
     my $response = $gui{d}{ScreenShotFileChooser}{dialog}->run();
     $gui{d}{ScreenShotFileChooser}{dialog}->hide();
     my $filename = $gui{d}{ScreenShotFileChooser}{dialog}->get_filename();
