@@ -13,6 +13,11 @@ This downloads and extracts MSYS2 if it is not already present, updates it,
 installs GTK 3 and the Perl modules RemoteBox needs. The Perl GTK bindings are
 not packaged by MSYS2, so they are built from CPAN. The script is safe to re-run.
 
+Some MSYS2 mirrors rate-limit downloads (HTTP 429). pacman therefore downloads
+one package at a time and failed runs are retried with increasing pauses (10s,
+20s, 40s, 80s); packages already downloaded are kept. On a fast, reliable
+connection `-ParallelDownloads 5` restores pacman's default speed.
+
 Then run RemoteBox from the source tree:
 
     misc\windows\remotebox-dev.cmd
@@ -75,6 +80,7 @@ the user's RemoteBox settings in `%LOCALAPPDATA%` in place.
 |---|---|
 | `setup-msys2.ps1` | Installs/updates MSYS2, then runs `setup-deps.sh` |
 | `setup-deps.sh` | Installs packages and builds Perl modules inside UCRT64 |
+| `pacman-retry.sh` | Runs pacman with limited parallel downloads and retries |
 | `remotebox-dev.cmd` | Runs RemoteBox from the source tree with the right `PATH` |
 | `make-installer.ps1` | Runs `make-bundle.sh` from PowerShell |
 | `make-bundle.sh` | Builds the application folder, launcher and installer |

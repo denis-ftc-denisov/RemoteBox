@@ -4,15 +4,28 @@
   missing packages and Perl modules are installed.
 
   Usage (from any PowerShell prompt, admin rights are not needed):
-      powershell -ExecutionPolicy Bypass -File misc\windows\setup-msys2.ps1 [-Msys2Root C:\msys64]
+      powershell -ExecutionPolicy Bypass -File misc\windows\setup-msys2.ps1 [-Msys2Root C:\msys64] [-ParallelDownloads 1]
+
+  -ParallelDownloads sets how many packages pacman downloads at once. The default
+  of 1 avoids rate limiting (HTTP 429) by some mirrors; failed downloads are
+  retried with increasing pauses either way (see pacman-retry.sh).
 #>
 param(
-    [string]$Msys2Root = 'C:\msys64'
+    [string]$Msys2Root = 'C:\msys64',
+    [ValidateRange(1, 20)][int]$ParallelDownloads = 1
 )
 
 $ErrorActionPreference = 'Stop'
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $bash = Join-Path $Msys2Root 'usr\bin\bash.exe'
+$env:PACMAN_PARALLEL = "$ParallelDownloads"
+
+# Windows PowerShell mangles embedded double quotes passed to native commands,
+# so scripts are passed to bash as MSYS paths in single quotes only
+function ConvertTo-MsysPath([string]$p) {
+    $p = $p -replace '\\', '/'
+    [regex]::Replace($p, '^([A-Za-z]):', { param($m) '/' + $m.Groups[1].Value.ToLower() })
+}
 
 function Invoke-Msys2([string]$cmd) {
     $env:MSYSTEM = 'UCRT64'
@@ -42,14 +55,12 @@ if (-not (Test-Path $bash)) {
 }
 
 # Full system upgrade. Core packages may require the shell to restart, hence twice.
-Invoke-Msys2 'pacman -Syuu --noconfirm'
-Invoke-Msys2 'pacman -Syuu --noconfirm'
+# pacman-retry.sh limits parallel downloads and retries on mirror errors.
+$pacman = ConvertTo-MsysPath (Join-Path $scriptDir 'pacman-retry.sh')
+Invoke-Msys2 "bash '$pacman' -Syuu --noconfirm"
+Invoke-Msys2 "bash '$pacman' -Syuu --noconfirm"
 
-# Windows PowerShell mangles embedded double quotes passed to native commands,
-# so convert to an MSYS path here and only use single quotes
-$deps = (Join-Path $scriptDir 'setup-deps.sh') -replace '\\', '/'
-$deps = [regex]::Replace($deps, '^([A-Za-z]):', { param($m) '/' + $m.Groups[1].Value.ToLower() })
-Invoke-Msys2 "bash '$deps'"
+Invoke-Msys2 ("bash '" + (ConvertTo-MsysPath (Join-Path $scriptDir 'setup-deps.sh')) + "'")
 
 Write-Host ""
 Write-Host "Build environment ready. To run RemoteBox from the source tree:"

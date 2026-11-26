@@ -15,11 +15,12 @@ PKG=mingw-w64-ucrt-x86_64
 # Perl's own tools (cpan) and the ones cpanm installs live outside the default PATH
 export PATH="$MINGW_PREFIX/bin/site_perl:$MINGW_PREFIX/bin/core_perl:$PATH"
 
+# pacman-retry.sh limits parallel downloads and retries on mirror errors (429).
 # Runtime: Perl, GTK 3, the introspection data Perl's Gtk3 module binds to and
 # the Perl modules MSYS2 already packages.
 # Build-only: compiler, make and pkg-config for the XS modules built by cpanm,
 # NSIS for the installer made by make-bundle.sh.
-pacman -S --needed --noconfirm \
+"$SCRIPT_DIR/pacman-retry.sh" -S --needed --noconfirm \
     $PKG-perl \
     $PKG-perl-lwp-protocol-https \
     $PKG-perl-regexp-common \
