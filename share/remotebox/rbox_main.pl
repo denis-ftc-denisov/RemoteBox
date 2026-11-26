@@ -729,9 +729,10 @@ sub open_remote_display {
             $dispcmd =~ s/%X/$prefs{AUTOHINTDISPX}/g;
             $dispcmd =~ s/%Y/$prefs{AUTOHINTDISPY}/g;
             $dispcmd =~ s/%D/$prefs{AUTOHINTDISPD}/g;
-            ($^O =~ m/MSWin/) ? $dispcmd .= ' >nul' : $dispcmd .= ' &';
             addrow_msg_log("Request sent to open the display of $$gref{Name} at address $dst:$$IVRDEServerInfo{port}", $dispcmd);
-            system("$dispcmd");
+            # The client must run in the background or the GUI blocks until it exits.
+            # On Windows, system(1, ...) starts a process without waiting for it.
+            ($^O =~ m/MSWin/) ? system(1, $dispcmd) : system("$dispcmd &");
         }
         else { show_err_msg('remotedisplay', 0, " ($$gref{Name})"); }
     }
