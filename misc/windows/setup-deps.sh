@@ -12,7 +12,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PKG=mingw-w64-ucrt-x86_64
 
-# Perl's own tools (cpan) and the ones cpanm installs live outside the default PATH
+# cpanm and the tools it installs live outside the default PATH
 export PATH="$MINGW_PREFIX/bin/site_perl:$MINGW_PREFIX/bin/core_perl:$PATH"
 
 # pacman-retry.sh limits parallel downloads and retries on mirror errors (429).
@@ -22,6 +22,7 @@ export PATH="$MINGW_PREFIX/bin/site_perl:$MINGW_PREFIX/bin/core_perl:$PATH"
 # NSIS for the installer made by make-bundle.sh.
 "$SCRIPT_DIR/pacman-retry.sh" -S --needed --noconfirm \
     $PKG-perl \
+    $PKG-perl-mozilla-ca \
     $PKG-perl-lwp-protocol-https \
     $PKG-perl-regexp-common \
     $PKG-perl-file-which \
@@ -35,8 +36,23 @@ export PATH="$MINGW_PREFIX/bin/site_perl:$MINGW_PREFIX/bin/core_perl:$PATH"
     make \
     patch
 
+# Native Perl does not look in MSYS2's certificate store, so HTTPS downloads by
+# Perl tools fail with "Couldn't find a CA bundle". Mozilla::CA (above) covers
+# HTTP::Tiny and IO::Socket::SSL, SSL_CERT_FILE covers anything else.
+export SSL_CERT_FILE="$(cygpath -w "$MINGW_PREFIX/etc/ssl/certs/ca-bundle.crt")"
+
+# Bootstrap cpanm from its CPAN release. cpan itself is avoided: it needs an
+# interactive first-run configuration.
+CPANM_DIST=App-cpanminus-1.7049
 if ! command -v cpanm >/dev/null 2>&1; then
-    cpan -T App::cpanminus </dev/null
+    work="$(mktemp -d)"
+    curl -fsSL --retry 5 -o "$work/$CPANM_DIST.tar.gz" \
+        "https://cpan.metacpan.org/authors/id/M/MI/MIYAGAWA/$CPANM_DIST.tar.gz"
+    tar -xzf "$work/$CPANM_DIST.tar.gz" -C "$work"
+    # The release contains a self-contained cpanm, used here to install itself
+    (cd "$work/$CPANM_DIST" && perl bin/cpanm --notest .)
+    rm -rf "$work"
+    hash -r
 fi
 
 # Order matters: the build helpers must exist before the XS bindings
